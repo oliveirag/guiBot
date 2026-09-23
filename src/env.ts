@@ -10,6 +10,9 @@ const schema = z.object({
   OWNER_IDS: z.string().default(''),
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   JIRA_WEBHOOK_SECRET: z.string().optional(),
+  JIRA_BASE_URL: z.string().optional(),
+  JIRA_EMAIL: z.string().optional(),
+  JIRA_API_TOKEN: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 
@@ -24,6 +27,8 @@ export interface Env {
   isProduction: boolean;
   githubWebhookSecret?: string;
   jiraWebhookSecret?: string;
+  /** Read-only Jira REST access for /sprint and /team link. All three or none. */
+  jira?: { baseUrl: string; email: string; token: string };
 }
 
 const csv = (value: string | undefined): string[] =>
@@ -51,5 +56,9 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
     isProduction: e.NODE_ENV === 'production',
     githubWebhookSecret: e.GITHUB_WEBHOOK_SECRET || undefined,
     jiraWebhookSecret: e.JIRA_WEBHOOK_SECRET || undefined,
+    jira:
+      e.JIRA_BASE_URL && e.JIRA_EMAIL && e.JIRA_API_TOKEN
+        ? { baseUrl: e.JIRA_BASE_URL.replace(/\/+$/, ''), email: e.JIRA_EMAIL, token: e.JIRA_API_TOKEN }
+        : undefined,
   };
 }

@@ -42,4 +42,14 @@ describe('parseEnv', () => {
     expect(env.githubWebhookSecret).toBe('gh');
     expect(env.jiraWebhookSecret).toBeUndefined();
   });
+
+  it('reads Jira API access only when all three vars are set', () => {
+    const jira = { JIRA_BASE_URL: 'https://sd.atlassian.net/', JIRA_EMAIL: 'bot@ucf.edu', JIRA_API_TOKEN: 't' };
+    expect(parseEnv({ ...base, ...jira }).jira).toEqual({
+      baseUrl: 'https://sd.atlassian.net',
+      email: 'bot@ucf.edu',
+      token: 't',
+    });
+    expect(parseEnv({ ...base, ...jira, JIRA_API_TOKEN: '' }).jira).toBeUndefined();
+  });
 });

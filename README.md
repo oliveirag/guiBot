@@ -55,6 +55,35 @@ The `dev` module posts PRs opened/merged, review requests, approvals and change 
 
 To ping a role when a workflow fails: `/config dev failure-ping role:@Devs` (run it with no role to turn it off).
 
-Pushes are stored but not posted. Senior Design stats use them later.
+Pushes to other branches are stored but not posted. Senior Design stats use them.
+
+## Senior Design
+
+The `sd` module runs the team: who's who, standups, meetings, deadlines, the Jira sprint, and progress stats.
+Stats come from the GitHub and Jira events above, so set those feeds up first.
+
+- `/team link github:<login> jira:<email or Jira profile link>`: everyone runs this once so their work counts.
+  Managers can link others with `member:`. `/team list`, `/team unlink`.
+- `/deadline add title date [time]`, `/deadline list`, `/deadline done id`. Reminders go out 7, 2, and 1 day
+  before, and a board in the deadlines channel keeps itself current.
+- `/meeting create title date time [length] [weekly] [location] [channel]`: posts RSVP buttons, creates a
+  Discord event (needs Manage Events), and pings everyone going or maybe 1 hour and 10 minutes before.
+  Weekly meetings post next week's copy when they start. `/meeting list`, `/meeting cancel id`.
+- `/sprint [project]`: the active sprint's to do, in progress, and done, with who owns what.
+- `/progress [member] [days]`: commits, PRs, reviews, Jira issues done, and standup attendance.
+- `/standup config channel time [days] [summary-after]`: posts a standup with a button that opens a form (done,
+  today, blockers). The summary posts later and flags who's missing and who's blocked. `/standup off` stops it,
+  `/standup open|close` runs today's by hand.
+
+Settings live in `/config sd`:
+
+- `digest channel [day] [time]`: a weekly post of who did what and what's due. `digest-off` stops it.
+- `deadlines channel`: where deadline reminders and the board go.
+- `timezone zone`: for schedules and the dates people type. Defaults to America/New_York.
+- `show`: current settings.
+
+`/sprint` and Jira email lookup in `/team link` need read-only API access: set `JIRA_BASE_URL`
+(`https://<site>.atlassian.net`), `JIRA_EMAIL`, and `JIRA_API_TOKEN` (from id.atlassian.com, API tokens).
+Without them, people can paste their Jira profile link into `/team link` instead of an email.
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

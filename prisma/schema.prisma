@@ -78,3 +78,111 @@ model DevSettings {
   failureRoleId String?
   updatedAt     DateTime @updatedAt
 }
+
+// Senior Design: a member's GitHub and Jira identities, so stats can be credited to them.
+model SdMember {
+  guildId       String
+  userId        String
+  // Lowercased GitHub login.
+  githubLogin   String?
+  jiraEmail     String?
+  // Jira webhooks identify people by accountId.
+  jiraAccountId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@id([guildId, userId])
+}
+
+// Per-guild Senior Design settings.
+model SdSettings {
+  guildId            String   @id
+  timezone           String   @default("America/New_York")
+  // Where deadline reminders and the upcoming board post.
+  deadlineChannelId  String?
+  boardMessageId     String?
+  standupChannelId   String?
+  // Local "HH:MM".
+  standupTime        String   @default("10:00")
+  // Comma-separated weekdays, 0 = Sunday.
+  standupDays        String   @default("1,2,3,4,5")
+  standupWindowHours Int      @default(4)
+  // Bumped on every standup change so jobs scheduled under old settings stop.
+  standupVersion     Int      @default(0)
+  digestChannelId    String?
+  digestDay          Int      @default(5)
+  digestTime         String   @default("17:00")
+  digestVersion      Int      @default(0)
+  updatedAt          DateTime @updatedAt
+}
+
+model SdDeadline {
+  id        Int       @id @default(autoincrement())
+  guildId   String
+  title     String
+  dueAt     DateTime
+  createdBy String
+  doneAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([guildId, doneAt, dueAt])
+}
+
+model SdStandup {
+  id        Int              @id @default(autoincrement())
+  guildId   String
+  channelId String
+  messageId String?
+  // Local "YYYY-MM-DD" in the guild's timezone.
+  day       String
+  closesAt  DateTime
+  closedAt  DateTime?
+  createdAt DateTime         @default(now())
+  entries   SdStandupEntry[]
+
+  @@unique([guildId, day])
+}
+
+model SdStandupEntry {
+  standupId Int
+  standup   SdStandup @relation(fields: [standupId], references: [id], onDelete: Cascade)
+  userId    String
+  yesterday String
+  today     String
+  blockers  String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@id([standupId, userId])
+}
+
+model SdMeeting {
+  id          Int       @id @default(autoincrement())
+  guildId     String
+  channelId   String
+  messageId   String?
+  // Discord scheduled event, when the bot could create one.
+  eventId     String?
+  title       String
+  location    String?
+  startsAt    DateTime
+  durationMin Int
+  weekly      Boolean   @default(false)
+  createdBy   String
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  rsvps       SdRsvp[]
+
+  @@index([guildId, startsAt])
+}
+
+model SdRsvp {
+  meetingId Int
+  meeting   SdMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId    String
+  // yes | maybe | no
+  status    String
+  updatedAt DateTime  @updatedAt
+
+  @@id([meetingId, userId])
+}
