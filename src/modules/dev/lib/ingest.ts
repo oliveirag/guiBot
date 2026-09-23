@@ -20,12 +20,26 @@ export interface IngestResult {
 
 type Target = { guildId: string; channelId: string };
 
+// SQLite has one writer. Concurrent interactive transactions time out waiting on each other under a
+// burst (a Jira bulk transition), so deliveries are ingested one at a time in this process.
+let queue: Promise<unknown> = Promise.resolve();
+
+function serialized<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => {});
+  return run;
+}
+
 /**
  * Stores one delivery's events and queues a dev.notify job per subscribed channel, all or nothing.
  * `deliveryId` is "<source>:<header id>"; each event is stored as "<deliveryId>#<index>".
  */
-export async function ingest(deliveryId: string, events: NormalizedEvent[], now = new Date()): Promise<IngestResult> {
-  if (events.length === 0) return { duplicate: false, stored: 0, queued: 0 };
+export function ingest(deliveryId: string, events: NormalizedEvent[], now = new Date()): Promise<IngestResult> {
+  if (events.length === 0) return Promise.resolve({ duplicate: false, stored: 0, queued: 0 });
+  return serialized(() => ingestNow(deliveryId, events, now));
+}
+
+async function ingestNow(deliveryId: string, events: NormalizedEvent[], now: Date): Promise<IngestResult> {
   const ids = events.map((_, i) => `${deliveryId}#${i}`);
   if (await prisma.devEvent.findUnique({ where: { deliveryId: ids[0]! } })) {
     return { duplicate: true, stored: 0, queued: 0 };
