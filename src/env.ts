@@ -37,6 +37,18 @@ const csv = (value: string | undefined): string[] =>
     .map((part) => part.trim())
     .filter(Boolean);
 
+// Pasted dashboard values often carry quotes or a trailing newline.
+const clean = (value: string | undefined): string => (value ?? '').trim().replace(/^(['"])([\s\S]*)\1$/, '$2').trim();
+
+function jiraAccess(baseUrl?: string, email?: string, token?: string): Env['jira'] {
+  // Tokens never contain whitespace; a space inside one is left over from copying a wrapped line.
+  const [b, e, t] = [clean(baseUrl), clean(email), clean(token).replace(/\s+/g, '')];
+  if (!b || !e || !t) return undefined;
+  // Keep only the site: "https://x.atlassian.net/jira/your-work" becomes "https://x.atlassian.net".
+  const site = /^https?:\/\/[^/]+/i.exec(b)?.[0] ?? b.replace(/\/+$/, '');
+  return { baseUrl: site, email: e, token: t };
+}
+
 export function parseEnv(raw: Record<string, string | undefined>): Env {
   const result = schema.safeParse(raw);
   if (!result.success) {
@@ -56,9 +68,6 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
     isProduction: e.NODE_ENV === 'production',
     githubWebhookSecret: e.GITHUB_WEBHOOK_SECRET || undefined,
     jiraWebhookSecret: e.JIRA_WEBHOOK_SECRET || undefined,
-    jira:
-      e.JIRA_BASE_URL && e.JIRA_EMAIL && e.JIRA_API_TOKEN
-        ? { baseUrl: e.JIRA_BASE_URL.replace(/\/+$/, ''), email: e.JIRA_EMAIL, token: e.JIRA_API_TOKEN }
-        : undefined,
+    jira: jiraAccess(e.JIRA_BASE_URL, e.JIRA_EMAIL, e.JIRA_API_TOKEN),
   };
 }

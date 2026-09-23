@@ -51,5 +51,12 @@ describe('parseEnv', () => {
       token: 't',
     });
     expect(parseEnv({ ...base, ...jira, JIRA_API_TOKEN: '' }).jira).toBeUndefined();
+    const messy = parseEnv({
+      ...base,
+      JIRA_BASE_URL: 'https://sd.atlassian.net/jira/your-work',
+      JIRA_EMAIL: ' bot@ucf.edu ',
+      JIRA_API_TOKEN: '"ATATT3x abc\ndef"\n',
+    });
+    expect(messy.jira).toEqual({ baseUrl: 'https://sd.atlassian.net', email: 'bot@ucf.edu', token: 'ATATT3xabcdef' });
   });
 });

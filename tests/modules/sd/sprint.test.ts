@@ -47,9 +47,11 @@ describe('findAccountId', () => {
     expect(await findAccountId(creds, 'x@y.z', fakeFetch({ '/rest/api/3/user/search': two }))).toBeNull();
   });
 
-  it('explains a rejected token', async () => {
-    const fetch = fakeFetch({ '/rest/api/3/user/search': { status: 401 } });
-    await expect(findAccountId(creds, 'x@y.z', fetch)).rejects.toThrow(/API token/);
+  it('tells a bad login apart from missing access', async () => {
+    const bad = fakeFetch({ '/rest/api/3/user/search': { status: 401 } });
+    await expect(findAccountId(creds, 'x@y.z', bad)).rejects.toThrow(/didn't accept the login/);
+    const forbidden = fakeFetch({ '/rest/api/3/user/search': { status: 403 } });
+    await expect(findAccountId(creds, 'x@y.z', forbidden)).rejects.toThrow(/can't see this/);
   });
 });
 

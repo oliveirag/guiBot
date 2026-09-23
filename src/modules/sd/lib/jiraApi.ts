@@ -48,8 +48,13 @@ async function jiraGet(creds: JiraCreds, path: string, fetchImpl: FetchLike): Pr
   const res = await fetchImpl(`${creds.baseUrl}${path}`, {
     headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' },
   });
-  if (res.status === 401 || res.status === 403) {
-    throw new UserError('Jira turned down my API token. Check JIRA_EMAIL and JIRA_API_TOKEN.');
+  if (res.status === 401) {
+    throw new UserError(
+      "Jira didn't accept the login. JIRA_EMAIL must be the email of the account that made JIRA_API_TOKEN, and the token must be a plain one (not \"with scopes\").",
+    );
+  }
+  if (res.status === 403) {
+    throw new UserError("Jira accepted the login, but that account can't see this. Give it access to the project.");
   }
   if (!res.ok) throw new JiraApiError(res.status, path.split('?')[0]!);
   return res.json();
