@@ -67,10 +67,37 @@ const pushEvent = z.object({
   ref: z.string(),
   deleted: z.boolean().optional(),
   compare: z.string().nullish(),
-  repository,
+  repository: repository.extend({ default_branch: z.string().optional() }),
   sender: user,
-  commits: z.array(z.object({ distinct: z.boolean().optional() })).default([]),
+  commits: z
+    .array(
+      z.object({
+        id: z.string().optional(),
+        message: z.string().optional(),
+        url: z.string().optional(),
+        distinct: z.boolean().optional(),
+      }),
+    )
+    .default([]),
 });
+
+const PUSH_COMMITS_SHOWN = 5;
+
+type PushCommit = z.infer<typeof pushEvent>['commits'][number];
+
+/** One linked line per commit (newest last, capped), then who pushed. */
+function pushDetail(commits: PushCommit[], pusher: string): string {
+  const lines = commits.slice(0, PUSH_COMMITS_SHOWN).map((c) => {
+    const short = c.id ? `\`${c.id.slice(0, 7)}\`` : '';
+    const sha = short && c.url ? `[${short}](${c.url})` : short;
+    const subject = c.message?.split('\n')[0]?.trim() ?? '';
+    return [sha, subject].filter(Boolean).join(' ');
+  });
+  const hidden = commits.length - PUSH_COMMITS_SHOWN;
+  if (hidden > 0) lines.push(`…and ${hidden} more`);
+  lines.push(`**By** ${pusher} · pull to update`);
+  return lines.join('\n');
+}
 
 const FAILED = new Set(['failure', 'timed_out', 'startup_failure']);
 
@@ -187,14 +214,16 @@ export function normalizeGithub(name: string, payload: unknown): NormalizedEvent
       if (!parsed.success) return [];
       const { ref, deleted, compare, repository: repo, sender, commits } = parsed.data;
       if (deleted || !ref.startsWith('refs/heads/')) return [];
-      const count = commits.filter((c) => c.distinct !== false).length;
+      const distinct = commits.filter((c) => c.distinct !== false);
+      const count = distinct.length;
       if (count === 0) return [];
       const branch = ref.slice('refs/heads/'.length);
+      const onDefault = branch === repo.default_branch;
       return [
-        event('push', repo.full_name, sender.login, {
+        event(onDefault ? 'push.default' : 'push', repo.full_name, sender.login, {
           title: `${count} commit${count === 1 ? '' : 's'} to ${branch}`,
           url: compare ?? null,
-          detail: null,
+          detail: onDefault ? pushDetail(distinct, sender.login) : null,
           count,
         }),
       ];

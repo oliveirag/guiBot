@@ -14,6 +14,7 @@ const LABEL: Record<DevEventKind, string> = {
   'workflow.fixed': 'Back to green',
   'release.published': 'Release published',
   push: 'Pushed',
+  'push.default': 'New commits',
   'issue.created': 'Issue created',
   'issue.transitioned': 'Issue moved',
   'issue.done': 'Issue done',

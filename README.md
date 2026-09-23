@@ -44,7 +44,7 @@ To add a module, create `src/modules/<name>/index.ts` that exports `moduleMeta({
 
 ## GitHub and Jira notifications
 
-The `dev` module posts PRs opened/merged, review requests, approvals and change requests, failed workflow runs (and "back to green" when the next run passes), releases, and Jira issue changes.
+The `dev` module posts PRs opened/merged, review requests, approvals and change requests, failed workflow runs (and "back to green" when the next run passes), releases, pushes to the default branch (so people know to pull), and Jira issue changes.
 
 1. Set `GITHUB_WEBHOOK_SECRET` and/or `JIRA_WEBHOOK_SECRET` to long random strings (`openssl rand -hex 32`).
 2. GitHub: repo Settings → Webhooks → Add webhook. Payload URL `https://<your-railway-domain>/webhooks/github`,

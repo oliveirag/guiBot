@@ -153,19 +153,50 @@ describe('normalizeGithub', () => {
 
   it('stores branch pushes with their distinct commit count', () => {
     const push = (extra: Record<string, unknown>) => ({
-      ref: 'refs/heads/main',
-      repository,
+      ref: 'refs/heads/feature',
+      repository: { ...repository, default_branch: 'main' },
       sender: { login: 'gui' },
       compare: 'https://github.com/x/compare/a...b',
       commits: [{ distinct: true }, { distinct: true }, { distinct: false }],
       ...extra,
     });
     expect(normalizeGithub('push', push({}))).toMatchObject([
-      { kind: 'push', count: 2, actor: 'gui', title: '2 commits to main', url: 'https://github.com/x/compare/a...b' },
+      { kind: 'push', count: 2, actor: 'gui', title: '2 commits to feature', url: 'https://github.com/x/compare/a...b' },
     ]);
     expect(normalizeGithub('push', push({ deleted: true }))).toEqual([]);
     expect(normalizeGithub('push', push({ ref: 'refs/tags/v1' }))).toEqual([]);
     expect(normalizeGithub('push', push({ commits: [] }))).toEqual([]);
+  });
+
+  it('marks default-branch pushes for posting and lists their commits', () => {
+    const commit = (n: number, distinct = true) => ({
+      id: `${n}`.repeat(40),
+      message: `Commit ${n}\n\nbody`,
+      url: `https://github.com/x/commit/${n}`,
+      distinct,
+    });
+    const push = (commits: unknown[]) => ({
+      ref: 'refs/heads/main',
+      repository: { ...repository, default_branch: 'main' },
+      sender: { login: 'gui' },
+      compare: 'https://github.com/x/compare/a...b',
+      commits,
+    });
+
+    expect(normalizeGithub('push', push([commit(1), commit(2, false)]))).toMatchObject([
+      {
+        kind: 'push.default',
+        count: 1,
+        title: '1 commit to main',
+        detail: '[`1111111`](https://github.com/x/commit/1) Commit 1\n**By** gui · pull to update',
+      },
+    ]);
+
+    const [many] = normalizeGithub('push', push([1, 2, 3, 4, 5, 6, 7].map((n) => commit(n))));
+    expect(many!.detail!.split('\n')).toHaveLength(7);
+    expect(many!.detail).toContain('Commit 5');
+    expect(many!.detail).not.toContain('Commit 6');
+    expect(many!.detail).toContain('and 2 more');
   });
 
   it('ignores unknown events and malformed payloads', () => {

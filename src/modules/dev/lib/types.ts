@@ -11,12 +11,13 @@ export type DevEventKind =
   | 'workflow.fixed'
   | 'release.published'
   | 'push'
+  | 'push.default'
   | 'issue.created'
   | 'issue.transitioned'
   | 'issue.done'
   | 'issue.assigned';
 
-// Pushes and plain successful runs are stored for Senior Design stats but never posted.
+// Pushes to non-default branches and plain successful runs are stored for Senior Design stats but never posted.
 export const NOTIFY_KINDS: ReadonlySet<DevEventKind> = new Set<DevEventKind>([
   'pr.opened',
   'pr.merged',
@@ -26,6 +27,7 @@ export const NOTIFY_KINDS: ReadonlySet<DevEventKind> = new Set<DevEventKind>([
   'workflow.failed',
   'workflow.fixed',
   'release.published',
+  'push.default',
   'issue.created',
   'issue.transitioned',
   'issue.done',

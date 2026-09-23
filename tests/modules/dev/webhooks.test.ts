@@ -99,16 +99,17 @@ describe('dev webhooks', () => {
     expect(await prisma.job.count()).toBe(1);
   });
 
-  it('stores pushes without queueing posts', async () => {
+  it('posts default-branch pushes and only stores the rest', async () => {
     await addFeed('g1', 'github', 'o/r', 'c1');
-    const res = await github('push', 'd2', {
-      ref: 'refs/heads/main',
-      repository: { full_name: 'o/r' },
+    const push = (ref: string) => ({
+      ref,
+      repository: { full_name: 'o/r', default_branch: 'main' },
       sender: { login: 'gui' },
       commits: [{ distinct: true }],
     });
-    expect(res.json()).toEqual({ duplicate: false, stored: 1, queued: 0 });
-    expect(await prisma.job.count()).toBe(0);
+    expect((await github('push', 'd2', push('refs/heads/feature'))).json()).toEqual({ duplicate: false, stored: 1, queued: 0 });
+    expect((await github('push', 'd3', push('refs/heads/main'))).json()).toEqual({ duplicate: false, stored: 1, queued: 1 });
+    expect(await prisma.job.count()).toBe(1);
   });
 
   it('answers pings and ignores events it does not track', async () => {
