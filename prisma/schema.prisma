@@ -30,3 +30,40 @@ model Job {
 
   @@index([status, runAt])
 }
+
+// Where a guild wants a repo's or project's events posted.
+model DevFeed {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  // github | jira
+  source    String
+  // GitHub "owner/repo" (lowercased) or Jira project key (uppercased).
+  key       String
+  channelId String
+  createdAt DateTime @default(now())
+
+  @@unique([guildId, source, key])
+  @@index([source, key])
+}
+
+// Every normalized webhook event, notified or not. Senior Design reads these later.
+model DevEvent {
+  id         Int      @id @default(autoincrement())
+  // "<source>:<delivery id>#<index>", unique so redeliveries are ignored.
+  deliveryId String   @unique
+  source     String
+  kind       String
+  key        String
+  // GitHub login or Jira accountId of whoever triggered it.
+  actor      String?
+  actorName  String?
+  title      String
+  url        String?
+  detail     String?
+  // Commit count for pushes.
+  count      Int?
+  createdAt  DateTime @default(now())
+
+  @@index([source, key, createdAt])
+  @@index([actor, createdAt])
+}
