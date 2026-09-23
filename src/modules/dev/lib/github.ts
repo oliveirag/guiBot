@@ -4,18 +4,35 @@ import type { DevEventKind, NormalizedEvent } from './types.js';
 const user = z.object({ login: z.string() });
 const repository = z.object({ full_name: z.string() });
 
+const pullRequest = z.object({
+  number: z.number(),
+  title: z.string(),
+  html_url: z.string(),
+  user,
+  merged: z.boolean().nullish(),
+  merged_by: user.nullish(),
+  base: z.object({ ref: z.string() }),
+  draft: z.boolean().optional(),
+});
+
 const pullRequestEvent = z.object({
   action: z.string(),
   repository,
-  pull_request: z.object({
-    number: z.number(),
-    title: z.string(),
-    html_url: z.string(),
+  sender: user.optional(),
+  requested_reviewer: user.nullish(),
+  requested_team: z.object({ name: z.string() }).nullish(),
+  pull_request: pullRequest,
+});
+
+const reviewEvent = z.object({
+  action: z.string(),
+  repository,
+  pull_request: pullRequest,
+  review: z.object({
+    state: z.string(),
+    body: z.string().nullish(),
     user,
-    merged: z.boolean().nullish(),
-    merged_by: user.nullish(),
-    base: z.object({ ref: z.string() }),
-    draft: z.boolean().optional(),
+    html_url: z.string(),
   }),
 });
 
@@ -81,7 +98,7 @@ function event(
   kind: DevEventKind,
   fullName: string,
   actor: string | null,
-  fields: Pick<NormalizedEvent, 'title' | 'url' | 'detail'> & { count?: number },
+  fields: Pick<NormalizedEvent, 'title' | 'url' | 'detail'> & { count?: number; stream?: string },
 ): NormalizedEvent {
   return {
     source: 'github',
@@ -93,6 +110,7 @@ function event(
     url: fields.url,
     detail: fields.detail,
     count: fields.count ?? null,
+    stream: fields.stream ?? null,
   };
 }
 
@@ -110,19 +128,45 @@ export function normalizeGithub(name: string, payload: unknown): NormalizedEvent
         const by = pr.merged_by ? ` by ${pr.merged_by.login}` : '';
         return [event('pr.merged', repo.full_name, pr.user.login, { ...base, detail: `Merged into ${pr.base.ref}${by}` })];
       }
+      if (action === 'review_requested') {
+        const reviewer = parsed.data.requested_reviewer?.login ?? (parsed.data.requested_team ? `team ${parsed.data.requested_team.name}` : null);
+        if (!reviewer) return [];
+        const asker = parsed.data.sender?.login ?? pr.user.login;
+        return [event('pr.review_requested', repo.full_name, asker, { ...base, detail: `${asker} asked ${reviewer} for a review` })];
+      }
+      return [];
+    }
+    case 'pull_request_review': {
+      const parsed = reviewEvent.safeParse(payload);
+      if (!parsed.success || parsed.data.action !== 'submitted') return [];
+      const { repository: repo, pull_request: pr, review } = parsed.data;
+      const reviewer = review.user.login;
+      const quote = review.body?.split('\n')[0]?.trim();
+      const withQuote = (line: string) => (quote ? `${line}\n> ${quote}` : line);
+      const base = { title: `#${pr.number} ${pr.title}`, url: review.html_url };
+      if (review.state === 'approved') {
+        return [event('pr.approved', repo.full_name, reviewer, { ...base, detail: withQuote(`Approved by ${reviewer}`) })];
+      }
+      if (review.state === 'changes_requested') {
+        return [event('pr.changes_requested', repo.full_name, reviewer, { ...base, detail: withQuote(`${reviewer} requested changes`) })];
+      }
       return [];
     }
     case 'workflow_run': {
       const parsed = workflowRunEvent.safeParse(payload);
       if (!parsed.success) return [];
       const { action, repository: repo, workflow_run: run } = parsed.data;
-      if (action !== 'completed' || !FAILED.has(run.conclusion ?? '')) return [];
+      if (action !== 'completed') return [];
+      const failed = FAILED.has(run.conclusion ?? '');
+      if (!failed && run.conclusion !== 'success') return [];
+      const name = run.name ?? 'Workflow';
       const actor = run.actor?.login ?? null;
       return [
-        event('workflow.failed', repo.full_name, actor, {
-          title: `${run.name ?? 'Workflow'} #${run.run_number} failed`,
+        event(failed ? 'workflow.failed' : 'workflow.succeeded', repo.full_name, actor, {
+          title: `${name} #${run.run_number} ${failed ? 'failed' : 'passed'}`,
           url: run.html_url,
           detail: failureDetail(repo.html_url, run.head_branch, run.head_sha, run.head_commit?.message, actor),
+          stream: `${name}@${run.head_branch ?? ''}`,
         }),
       ];
     }

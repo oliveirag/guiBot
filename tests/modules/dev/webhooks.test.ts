@@ -171,6 +171,31 @@ describe('dev webhooks', () => {
     expect(noDelivery.statusCode).toBe(400);
   });
 
+  it('posts "back to green" only when the same workflow and branch failed last time', async () => {
+    await addFeed('g1', 'github', 'o/r', 'c1');
+    const run = (conclusion: string, n: number, branch = 'main') => ({
+      action: 'completed',
+      repository: { full_name: 'o/r' },
+      workflow_run: { name: 'CI', head_branch: branch, conclusion, html_url: `https://github.com/o/r/actions/runs/${n}`, run_number: n },
+    });
+    const kinds = async () => (await prisma.devEvent.findMany({ orderBy: { id: 'asc' } })).map((e) => e.kind);
+
+    expect((await github('workflow_run', 'w1', run('success', 1))).json()).toMatchObject({ queued: 0 });
+    expect((await github('workflow_run', 'w2', run('failure', 2))).json()).toMatchObject({ queued: 1 });
+    expect((await github('workflow_run', 'w3', run('success', 3, 'feature'))).json()).toMatchObject({ queued: 0 });
+    expect((await github('workflow_run', 'w4', run('success', 4))).json()).toMatchObject({ queued: 1 });
+    expect((await github('workflow_run', 'w5', run('success', 5))).json()).toMatchObject({ queued: 0 });
+    expect(await kinds()).toEqual([
+      'workflow.succeeded',
+      'workflow.failed',
+      'workflow.succeeded',
+      'workflow.fixed',
+      'workflow.succeeded',
+    ]);
+    const fixed = await prisma.devEvent.findFirstOrThrow({ where: { kind: 'workflow.fixed' } });
+    expect(fixed.title).toBe('CI #4 is passing again');
+  });
+
   it('stores each change in one Jira update as its own event', async () => {
     await addFeed('g1', 'jira', 'SD', 'c9');
     const res = await jira('w1', {

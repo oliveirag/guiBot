@@ -1,7 +1,7 @@
 import type { DevEvent } from '@prisma/client';
 import type { Client } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BRAND_COLOR, ERROR_COLOR } from '../../../src/core/embeds.js';
+import { BRAND_COLOR, ERROR_COLOR, SUCCESS_COLOR } from '../../../src/core/embeds.js';
 import { log } from '../../../src/core/log.js';
 import { prisma } from '../../../src/db.js';
 import notify from '../../../src/modules/dev/jobs/notify.js';
@@ -60,6 +60,20 @@ describe('renderEvent', () => {
 
   it('colors failed workflows red', async () => {
     expect(renderEvent(await storeEvent({ kind: 'workflow.failed' })).toJSON().color).toBe(ERROR_COLOR);
+  });
+
+  it('colors fixed workflows and approvals green', async () => {
+    const fixed = renderEvent(await storeEvent({ kind: 'workflow.fixed' })).toJSON();
+    expect(fixed.color).toBe(SUCCESS_COLOR);
+    expect(fixed.author?.name).toBe('Back to green · o/r');
+    const approved = renderEvent(await storeEvent({ kind: 'pr.approved' })).toJSON();
+    expect(approved.color).toBe(SUCCESS_COLOR);
+    expect(approved.author?.name).toBe('Pull request approved · o/r');
+  });
+
+  it('labels review requests and change requests', async () => {
+    expect(renderEvent(await storeEvent({ kind: 'pr.review_requested' })).toJSON().author?.name).toBe('Review requested · o/r');
+    expect(renderEvent(await storeEvent({ kind: 'pr.changes_requested' })).toJSON().author?.name).toBe('Changes requested · o/r');
   });
 
   it('clips long titles', async () => {

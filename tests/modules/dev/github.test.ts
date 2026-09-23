@@ -27,6 +27,7 @@ describe('normalizeGithub', () => {
         url: 'https://github.com/OliveiraG/guiBot/pull/12',
         detail: 'gui wants to merge into main',
         count: null,
+        stream: null,
       },
     ]);
   });
@@ -74,7 +75,8 @@ describe('normalizeGithub', () => {
         ].join('\n'),
       },
     ]);
-    expect(normalizeGithub('workflow_run', run('success'))).toEqual([]);
+    // Successes are stored (not posted) so "back to green" can be detected.
+    expect(normalizeGithub('workflow_run', run('success'))).toMatchObject([{ kind: 'workflow.succeeded' }]);
     expect(normalizeGithub('workflow_run', run('cancelled'))).toEqual([]);
   });
 
@@ -85,6 +87,56 @@ describe('normalizeGithub', () => {
       workflow_run: { name: 'CI', conclusion: 'failure', html_url: 'https://github.com/x/actions/runs/2', run_number: 7 },
     });
     expect(event!.detail).toBeNull();
+  });
+
+  it('tags workflow runs with a workflow@branch stream and stores successes quietly', () => {
+    const run = (conclusion: string) => ({
+      action: 'completed',
+      repository,
+      workflow_run: { name: 'CI', head_branch: 'main', conclusion, html_url: 'https://github.com/x/actions/runs/3', run_number: 42, actor: { login: 'gui' } },
+    });
+    expect(normalizeGithub('workflow_run', run('failure'))).toMatchObject([{ kind: 'workflow.failed', stream: 'CI@main' }]);
+    expect(normalizeGithub('workflow_run', run('success'))).toMatchObject([
+      { kind: 'workflow.succeeded', stream: 'CI@main', title: 'CI #42 passed' },
+    ]);
+  });
+
+  it('turns a review request into pr.review_requested', () => {
+    const [event] = normalizeGithub('pull_request', {
+      action: 'review_requested',
+      repository,
+      sender: { login: 'gui' },
+      requested_reviewer: { login: 'ana' },
+      pull_request: pr(),
+    });
+    expect(event).toMatchObject({ kind: 'pr.review_requested', actor: 'gui', title: '#12 Add login', detail: 'gui asked ana for a review' });
+  });
+
+  it('names the team when a team is asked to review', () => {
+    const [event] = normalizeGithub('pull_request', {
+      action: 'review_requested',
+      repository,
+      sender: { login: 'gui' },
+      requested_team: { name: 'backend' },
+      pull_request: pr(),
+    });
+    expect(event!.detail).toBe('gui asked team backend for a review');
+  });
+
+  it('turns approvals and change requests into review events, and skips plain comments', () => {
+    const review = (state: string, body: string | null = null) => ({
+      action: 'submitted',
+      repository,
+      pull_request: pr(),
+      review: { state, body, user: { login: 'ana' }, html_url: 'https://github.com/x/pull/12#pullrequestreview-1' },
+    });
+    expect(normalizeGithub('pull_request_review', review('approved'))).toMatchObject([
+      { kind: 'pr.approved', actor: 'ana', detail: 'Approved by ana', url: 'https://github.com/x/pull/12#pullrequestreview-1' },
+    ]);
+    expect(normalizeGithub('pull_request_review', review('changes_requested', 'Rename this\nand add a test'))).toMatchObject([
+      { kind: 'pr.changes_requested', detail: 'ana requested changes\n> Rename this' },
+    ]);
+    expect(normalizeGithub('pull_request_review', review('commented'))).toEqual([]);
   });
 
   it('turns a published release into release.published', () => {

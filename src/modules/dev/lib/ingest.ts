@@ -39,11 +39,27 @@ export function ingest(deliveryId: string, events: NormalizedEvent[], now = new 
   return serialized(() => ingestNow(deliveryId, events, now));
 }
 
-async function ingestNow(deliveryId: string, events: NormalizedEvent[], now: Date): Promise<IngestResult> {
-  const ids = events.map((_, i) => `${deliveryId}#${i}`);
+const WORKFLOW_KINDS = ['workflow.failed', 'workflow.succeeded', 'workflow.fixed'];
+
+/** A success right after a failure on the same workflow and branch becomes a "back to green" post. */
+async function promoteFix(e: NormalizedEvent): Promise<NormalizedEvent> {
+  if (e.kind !== 'workflow.succeeded' || !e.stream) return e;
+  const last = await prisma.devEvent.findFirst({
+    where: { source: e.source, key: e.key, stream: e.stream, kind: { in: WORKFLOW_KINDS } },
+    orderBy: { id: 'desc' },
+  });
+  if (last?.kind !== 'workflow.failed') return e;
+  return { ...e, kind: 'workflow.fixed', title: e.title.replace(/ passed$/, ' is passing again') };
+}
+
+async function ingestNow(deliveryId: string, incoming: NormalizedEvent[], now: Date): Promise<IngestResult> {
+  const ids = incoming.map((_, i) => `${deliveryId}#${i}`);
   if (await prisma.devEvent.findUnique({ where: { deliveryId: ids[0]! } })) {
     return { duplicate: true, stored: 0, queued: 0 };
   }
+
+  const events: NormalizedEvent[] = [];
+  for (const e of incoming) events.push(await promoteFix(e));
 
   // Resolve targets before the transaction: SQLite has one writer, and these reads run outside it.
   const targets = new Map<string, Target[]>();
@@ -73,6 +89,7 @@ async function ingestNow(deliveryId: string, events: NormalizedEvent[], now: Dat
             url: e.url,
             detail: e.detail,
             count: e.count,
+            stream: e.stream,
           },
         });
         const dest = NOTIFY_KINDS.has(e.kind) ? (targets.get(`${e.source}:${e.key}`) ?? []) : [];

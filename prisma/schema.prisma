@@ -62,10 +62,13 @@ model DevEvent {
   detail     String?
   // Commit count for pushes.
   count      Int?
+  // "<workflow>@<branch>" for workflow runs, used to spot "back to green".
+  stream     String?
   createdAt  DateTime @default(now())
 
   @@index([source, key, createdAt])
   @@index([actor, createdAt])
+  @@index([source, key, stream])
 }
 
 // Per-guild dev module settings.

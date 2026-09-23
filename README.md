@@ -44,11 +44,11 @@ To add a module, create `src/modules/<name>/index.ts` that exports `moduleMeta({
 
 ## GitHub and Jira notifications
 
-The `dev` module posts PRs opened/merged, failed workflow runs, releases, and Jira issue changes.
+The `dev` module posts PRs opened/merged, review requests, approvals and change requests, failed workflow runs (and "back to green" when the next run passes), releases, and Jira issue changes.
 
 1. Set `GITHUB_WEBHOOK_SECRET` and/or `JIRA_WEBHOOK_SECRET` to long random strings (`openssl rand -hex 32`).
 2. GitHub: repo Settings → Webhooks → Add webhook. Payload URL `https://<your-railway-domain>/webhooks/github`,
-   content type `application/json`, the same secret, and events: Pull requests, Workflow runs, Releases, Pushes.
+   content type `application/json`, the same secret, and events: Pull requests, Pull request reviews, Workflow runs, Releases, Pushes.
 3. Jira: Settings → System → WebHooks → Create. URL `https://<your-railway-domain>/webhooks/jira`, the same
    secret, events: Issue created and Issue updated.
 4. In Discord: `/config dev add source:GitHub target:owner/repo channel:#dev`, and the same with `source:Jira target:SD`.

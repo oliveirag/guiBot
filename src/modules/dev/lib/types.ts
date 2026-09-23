@@ -3,7 +3,12 @@ export type FeedSource = 'github' | 'jira';
 export type DevEventKind =
   | 'pr.opened'
   | 'pr.merged'
+  | 'pr.review_requested'
+  | 'pr.approved'
+  | 'pr.changes_requested'
   | 'workflow.failed'
+  | 'workflow.succeeded'
+  | 'workflow.fixed'
   | 'release.published'
   | 'push'
   | 'issue.created'
@@ -11,11 +16,15 @@ export type DevEventKind =
   | 'issue.done'
   | 'issue.assigned';
 
-// Pushes are stored for Senior Design stats but never posted.
+// Pushes and plain successful runs are stored for Senior Design stats but never posted.
 export const NOTIFY_KINDS: ReadonlySet<DevEventKind> = new Set<DevEventKind>([
   'pr.opened',
   'pr.merged',
+  'pr.review_requested',
+  'pr.approved',
+  'pr.changes_requested',
   'workflow.failed',
+  'workflow.fixed',
   'release.published',
   'issue.created',
   'issue.transitioned',
@@ -35,4 +44,6 @@ export interface NormalizedEvent {
   url: string | null;
   detail: string | null;
   count: number | null;
+  /** "<workflow>@<branch>" for workflow runs, so a success can tell whether the last run failed. */
+  stream: string | null;
 }

@@ -43,6 +43,7 @@ export function normalizeJira(payload: unknown): NormalizedEvent[] {
     title: `${issue.key} ${issue.fields.summary}`,
     url: browseUrl(issue.self, issue.key),
     count: null,
+    stream: null,
   };
 
   if (webhookEvent === 'jira:issue_created') {

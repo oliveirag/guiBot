@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 
 export const BRAND_COLOR = 0x3b82f6;
 export const ERROR_COLOR = 0xef4444;
+export const SUCCESS_COLOR = 0x22c55e;
 
 function build(color: number, description: string, title?: string): EmbedBuilder {
   const embed = new EmbedBuilder().setColor(color).setDescription(description);

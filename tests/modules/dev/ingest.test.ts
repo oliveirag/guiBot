@@ -15,6 +15,7 @@ const event = (n: number): NormalizedEvent => ({
   url: null,
   detail: 'In Progress → Done',
   count: null,
+  stream: null,
 });
 
 describe('ingest', () => {

@@ -26,6 +26,7 @@ describe('normalizeJira', () => {
         url: 'https://team.atlassian.net/browse/SD-12',
         detail: 'Story created by Gui',
         count: null,
+        stream: null,
       },
     ]);
   });
