@@ -1,9 +1,18 @@
+import type { Prisma } from '@prisma/client';
+import type { Client } from 'discord.js';
 import { prisma } from '../db.js';
 import type { Logger } from './log.js';
 import type { JobHandler } from './types.js';
 
-export async function scheduleJob(type: string, runAt: Date, payload: unknown, guildId?: string): Promise<number> {
-  const row = await prisma.job.create({
+/** Pass `db` to schedule inside a caller's transaction. */
+export async function scheduleJob(
+  type: string,
+  runAt: Date,
+  payload: unknown,
+  guildId?: string,
+  db: Prisma.TransactionClient = prisma,
+): Promise<number> {
+  const row = await db.job.create({
     data: { type, runAt, payload: JSON.stringify(payload ?? null), guildId: guildId ?? null },
   });
   return row.id;
@@ -12,6 +21,7 @@ export async function scheduleJob(type: string, runAt: Date, payload: unknown, g
 export interface SchedulerOptions {
   handlers: JobHandler[];
   log: Logger;
+  client: Client;
   intervalMs?: number;
   maxAttempts?: number;
   batchSize?: number;
@@ -38,10 +48,17 @@ export class Scheduler {
     return this.opts.now?.() ?? new Date();
   }
 
-  /** Jobs marked running when the process died never finished; make them eligible again. */
-  async recoverStale(): Promise<number> {
-    const result = await prisma.job.updateMany({ where: { status: 'running' }, data: { status: 'pending' } });
-    return result.count;
+  /**
+   * Jobs marked running when the process died never finished. Re-queue them, unless they already
+   * used every attempt (a job that keeps crashing the process would otherwise loop forever).
+   */
+  async recoverStale(): Promise<{ requeued: number; failed: number }> {
+    const failed = await prisma.job.updateMany({
+      where: { status: 'running', attempts: { gte: this.opts.maxAttempts ?? 3 } },
+      data: { status: 'failed', lastError: 'Interrupted by a restart too many times' },
+    });
+    const requeued = await prisma.job.updateMany({ where: { status: 'running' }, data: { status: 'pending' } });
+    return { requeued: requeued.count, failed: failed.count };
   }
 
   /** Runs due jobs once. Returns how many were attempted. */
@@ -83,7 +100,7 @@ export class Scheduler {
     let timer: NodeJS.Timeout | undefined;
     try {
       await Promise.race([
-        handler.run(JSON.parse(payload), { id, guildId }),
+        handler.run(JSON.parse(payload), { id, guildId, client: this.opts.client }),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => reject(new Error(`Job timed out after ${timeoutMs}ms`)), timeoutMs);
         }),

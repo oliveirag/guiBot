@@ -1,5 +1,6 @@
 import type {
   ChatInputCommandInteraction,
+  Client,
   ClientEvents,
   PermissionResolvable,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
@@ -39,6 +40,7 @@ export interface EventHandler<K extends keyof ClientEvents = keyof ClientEvents>
 export interface JobContext {
   id: number;
   guildId: string | null;
+  client: Client;
 }
 
 export interface JobHandler {

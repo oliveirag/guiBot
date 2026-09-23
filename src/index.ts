@@ -38,12 +38,13 @@ client.on(Events.InteractionCreate, (interaction) => {
   }
 });
 
-const scheduler = new Scheduler({ handlers: registry.modules.flatMap((m) => m.jobs), log });
+const scheduler = new Scheduler({ handlers: registry.modules.flatMap((m) => m.jobs), log, client });
 client.once(Events.ClientReady, async (ready) => {
   log.info(`Ready as ${ready.user.tag}`);
   try {
-    const recovered = await scheduler.recoverStale();
-    if (recovered > 0) log.warn(`Recovered ${recovered} stale jobs`);
+    const { requeued, failed } = await scheduler.recoverStale();
+    if (requeued > 0) log.warn(`Re-queued ${requeued} jobs interrupted by a restart`);
+    if (failed > 0) log.warn(`Failed ${failed} jobs that kept getting interrupted`);
   } catch (error) {
     log.error('stale job recovery failed', error);
   }

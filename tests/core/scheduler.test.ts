@@ -1,3 +1,4 @@
+import type { Client } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { prisma } from '../../src/db.js';
 import { Scheduler, scheduleJob } from '../../src/core/scheduler.js';
@@ -7,19 +8,20 @@ import { silentLog } from '../helpers.js';
 
 const base = new Date('2026-01-01T00:00:00Z');
 const secondsFrom = (s: number) => new Date(base.getTime() + s * 1000);
+const client = { fake: 'client' } as unknown as Client;
 
 describe('Scheduler', () => {
   beforeEach(resetDb);
 
   function make(handlers: JobHandler[], clock = { now: base }) {
-    return new Scheduler({ handlers, log: silentLog(), maxAttempts: 2, now: () => clock.now });
+    return new Scheduler({ handlers, log: silentLog(), maxAttempts: 2, now: () => clock.now, client });
   }
 
   it('runs due jobs with their payload and marks them done', async () => {
     const run = vi.fn(async () => {});
     const id = await scheduleJob('test.ping', secondsFrom(-1), { hello: 'world' }, 'g1');
     expect(await make([{ type: 'test.ping', run }]).tick()).toBe(1);
-    expect(run).toHaveBeenCalledWith({ hello: 'world' }, { id, guildId: 'g1' });
+    expect(run).toHaveBeenCalledWith({ hello: 'world' }, { id, guildId: 'g1', client });
     expect((await prisma.job.findUniqueOrThrow({ where: { id } })).status).toBe('done');
   });
 
@@ -78,7 +80,7 @@ describe('Scheduler', () => {
       type: 'test.hang',
       run: () => new Promise(() => {}),
     };
-    const scheduler = new Scheduler({ handlers: [handler], log: silentLog(), maxAttempts: 2, now: () => base, jobTimeoutMs: 20 });
+    const scheduler = new Scheduler({ handlers: [handler], log: silentLog(), maxAttempts: 2, now: () => base, jobTimeoutMs: 20, client });
     const id = await scheduleJob('test.hang', secondsFrom(-1), null);
 
     await scheduler.tick();
@@ -90,9 +92,33 @@ describe('Scheduler', () => {
 
   it('resets jobs left running by a crash', async () => {
     const id = await scheduleJob('test.ping', secondsFrom(-1), null);
-    await prisma.job.update({ where: { id }, data: { status: 'running' } });
-    expect(await make([]).recoverStale()).toBe(1);
+    await prisma.job.update({ where: { id }, data: { status: 'running', attempts: 1 } });
+    expect(await make([]).recoverStale()).toEqual({ requeued: 1, failed: 0 });
     expect((await prisma.job.findUniqueOrThrow({ where: { id } })).status).toBe('pending');
+  });
+
+  it('fails crashed jobs that already used every attempt instead of looping', async () => {
+    const id = await scheduleJob('test.ping', secondsFrom(-1), null);
+    await prisma.job.update({ where: { id }, data: { status: 'running', attempts: 2 } });
+    expect(await make([]).recoverStale()).toEqual({ requeued: 0, failed: 1 });
+    const row = await prisma.job.findUniqueOrThrow({ where: { id } });
+    expect(row.status).toBe('failed');
+    expect(row.lastError).toMatch(/restart/);
+  });
+
+  it('schedules inside a caller transaction and rolls back with it', async () => {
+    await prisma.$transaction(async (tx) => {
+      await scheduleJob('test.ping', base, { a: 1 }, 'g1', tx);
+    });
+    expect(await prisma.job.count()).toBe(1);
+
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await scheduleJob('test.ping', base, { a: 2 }, 'g1', tx);
+        throw new Error('abort');
+      }),
+    ).rejects.toThrow('abort');
+    expect(await prisma.job.count()).toBe(1);
   });
 
   it('rejects duplicate handler types', () => {
@@ -114,7 +140,7 @@ describe('Scheduler', () => {
       },
     };
     const id = await scheduleJob('test.slow', secondsFrom(-1), null);
-    const scheduler = new Scheduler({ handlers: [handler], log: silentLog(), intervalMs: 10 });
+    const scheduler = new Scheduler({ handlers: [handler], log: silentLog(), intervalMs: 10, client });
 
     scheduler.start();
     await vi.waitFor(() => expect(started).toBe(true));
