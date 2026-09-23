@@ -53,6 +53,8 @@ The `dev` module posts PRs opened/merged, failed workflow runs, releases, and Ji
    secret, events: Issue created and Issue updated.
 4. In Discord: `/config dev add source:GitHub target:owner/repo channel:#dev`, and the same with `source:Jira target:SD`.
 
+To ping a role when a workflow fails: `/config dev failure-ping role:@Devs` (run it with no role to turn it off).
+
 Pushes are stored but not posted. Senior Design stats use them later.
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
