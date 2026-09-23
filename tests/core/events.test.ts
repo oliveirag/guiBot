@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import type { Client } from 'discord.js';
+import { Guild } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 import { bindEvents, extractGuildId } from '../../src/core/events.js';
 import { buildRegistry } from '../../src/core/loader.js';
@@ -13,6 +14,7 @@ describe('extractGuildId', () => {
     expect(extractGuildId([{ guildId: 'g1' }])).toBe('g1');
     expect(extractGuildId([{ guild: { id: 'g2' } }])).toBe('g2');
     expect(extractGuildId([{ message: { guildId: 'g3' } }, { id: 'user' }])).toBe('g3');
+    expect(extractGuildId([Object.assign(Object.create(Guild.prototype), { id: 'g4' })])).toBe('g4');
     expect(extractGuildId([{}, 'text', null])).toBeNull();
   });
 });

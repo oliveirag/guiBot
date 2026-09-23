@@ -6,9 +6,9 @@ export default command({
   data: new SlashCommandBuilder().setName('ping').setDescription('Check if guiBot is awake.'),
   cooldownSeconds: 5,
   async run({ interaction }) {
-    const roundtrip = Date.now() - interaction.createdTimestamp;
+    const latency = Date.now() - interaction.createdTimestamp;
     await interaction.reply({
-      embeds: [info(`Pong. Gateway ${interaction.client.ws.ping}ms, roundtrip ${roundtrip}ms.`)],
+      embeds: [info(`Pong. Gateway ${interaction.client.ws.ping}ms, latency ${latency}ms.`)],
     });
   },
 });
