@@ -1,5 +1,8 @@
 node_modules/
+dist/
 .env
-seen_entries.json
-debug_*.html
 .DS_Store
+debug_*.html
+seen_entries.json
+prisma/*.db
+prisma/*.db-journal

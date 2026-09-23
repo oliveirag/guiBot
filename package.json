@@ -1,22 +1,34 @@
 {
-  "name": "prizepicks-tracker",
-  "version": "1.0.0",
-  "description": "Tracks a public PrizePicks user's open lineups and posts new entries to a Discord channel in real time.",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "debug": "DEBUG_HTML=true node index.js"
+  "name": "guibot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gui's personal everything bot for Discord.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "deploy": "tsx src/deploy.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:migrate": "prisma migrate dev"
+  },
   "dependencies": {
-    "axios": "^1.13.6",
-    "discord.js": "^14.25.1",
-    "dotenv": "^17.3.1",
-    "puppeteer": "^24.38.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "@prisma/client": "^6.19.3",
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.12.5",
+    "prisma": "^6.19.3",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
   }
 }
