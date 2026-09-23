@@ -1,7 +1,16 @@
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import type { Command, ConfigSection, EventHandler, JobHandler, LoadedModule, ModuleMeta, Registry } from './types.js';
+import type {
+  Command,
+  ConfigSection,
+  EventHandler,
+  HttpRoutes,
+  JobHandler,
+  LoadedModule,
+  ModuleMeta,
+  Registry,
+} from './types.js';
 
 const SOURCE = /\.(ts|js)$/;
 const SKIP = /\.(d|test)\.ts$/;
@@ -42,7 +51,7 @@ async function findEntry(dir: string, base: string): Promise<string | null> {
   return null;
 }
 
-/** Loads every `root/<module>/index` plus its commands/, events/, jobs/ folders and optional config. */
+/** Loads every `root/<module>/index` plus its commands/, events/, jobs/, routes/ folders and optional config. */
 export async function loadModules(root: string, enabled: readonly string[] | null): Promise<LoadedModule[]> {
   const entries = (await readdir(root, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
@@ -62,6 +71,7 @@ export async function loadModules(root: string, enabled: readonly string[] | nul
       events: await importAll<EventHandler>(join(dir, 'events')),
       jobs: await importAll<JobHandler>(join(dir, 'jobs')),
       config: configFile ? await importDefault<ConfigSection>(configFile) : null,
+      routes: await importAll<HttpRoutes>(join(dir, 'routes')),
     });
   }
   return modules;

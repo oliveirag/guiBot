@@ -51,7 +51,7 @@ client.once(Events.ClientReady, async (ready) => {
   scheduler.start();
 });
 
-const server = buildServer();
+const server = buildServer({ routes: registry.modules.flatMap((m) => m.routes), deps: { env, log } });
 await server.listen({ port: env.port, host: '0.0.0.0' });
 log.info(`HTTP listening on ${env.port}`);
 

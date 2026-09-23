@@ -8,6 +8,8 @@ const schema = z.object({
   PORT: z.coerce.number().int().positive().default(3000),
   ENABLED_MODULES: z.string().optional(),
   OWNER_IDS: z.string().default(''),
+  GITHUB_WEBHOOK_SECRET: z.string().optional(),
+  JIRA_WEBHOOK_SECRET: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 
@@ -20,6 +22,8 @@ export interface Env {
   enabledModules: string[] | null;
   ownerIds: string[];
   isProduction: boolean;
+  githubWebhookSecret?: string;
+  jiraWebhookSecret?: string;
 }
 
 const csv = (value: string | undefined): string[] =>
@@ -45,5 +49,7 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
     enabledModules: enabled.length > 0 ? enabled : null,
     ownerIds: csv(e.OWNER_IDS),
     isProduction: e.NODE_ENV === 'production',
+    githubWebhookSecret: e.GITHUB_WEBHOOK_SECRET || undefined,
+    jiraWebhookSecret: e.JIRA_WEBHOOK_SECRET || undefined,
   };
 }

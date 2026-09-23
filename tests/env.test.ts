@@ -15,6 +15,8 @@ describe('parseEnv', () => {
       enabledModules: null,
       ownerIds: [],
       isProduction: false,
+      githubWebhookSecret: undefined,
+      jiraWebhookSecret: undefined,
     });
   });
 
@@ -33,5 +35,11 @@ describe('parseEnv', () => {
 
   it('names missing required vars', () => {
     expect(() => parseEnv({})).toThrow(/DISCORD_TOKEN.*DISCORD_CLIENT_ID/);
+  });
+
+  it('reads webhook secrets and treats empty ones as unset', () => {
+    const env = parseEnv({ ...base, GITHUB_WEBHOOK_SECRET: 'gh', JIRA_WEBHOOK_SECRET: '' });
+    expect(env.githubWebhookSecret).toBe('gh');
+    expect(env.jiraWebhookSecret).toBeUndefined();
   });
 });

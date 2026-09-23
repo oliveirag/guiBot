@@ -6,7 +6,9 @@ import type {
   RESTPostAPIChatInputApplicationCommandsJSONBody,
   SlashCommandSubcommandGroupBuilder,
 } from 'discord.js';
+import type { FastifyInstance } from 'fastify';
 import type { Env } from '../env.js';
+import type { Logger } from './log.js';
 
 // Matches SlashCommandBuilder and its subcommand/option builder variants.
 export interface CommandData {
@@ -65,12 +67,21 @@ export interface ConfigSection {
   view?(guildId: string): Promise<string>;
 }
 
+export interface HttpDeps {
+  env: Env;
+  log: Logger;
+}
+
+/** A module's HTTP routes. Lives in `src/modules/<name>/routes/`, one Fastify scope per file. */
+export type HttpRoutes = (app: FastifyInstance, deps: HttpDeps) => Promise<void>;
+
 export interface LoadedModule {
   meta: ModuleMeta;
   commands: Command[];
   events: EventHandler[];
   jobs: JobHandler[];
   config: ConfigSection | null;
+  routes: HttpRoutes[];
 }
 
 export interface Registry {

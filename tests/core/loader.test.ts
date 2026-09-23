@@ -16,6 +16,8 @@ describe('loadModules', () => {
     expect(beta.jobs.map((j) => j.type)).toEqual(['beta.tick']);
     expect(modules[0]!.config).toBeNull();
     expect(beta.config?.build).toBeTypeOf('function');
+    expect(beta.routes).toHaveLength(1);
+    expect(modules[0]!.routes).toEqual([]);
   });
 
   it('only loads enabled modules but always keeps alwaysOn ones', async () => {
