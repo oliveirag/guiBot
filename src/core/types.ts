@@ -4,6 +4,7 @@ import type {
   ClientEvents,
   PermissionResolvable,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
+  SlashCommandSubcommandGroupBuilder,
 } from 'discord.js';
 import type { Env } from '../env.js';
 
@@ -27,6 +28,8 @@ export interface CommandContext {
 
 export interface Command extends AccessRules {
   data: CommandData;
+  /** Builds slash data from every loaded module. Resolved once by buildRegistry, replacing `data`. */
+  dataFor?(modules: LoadedModule[]): CommandData;
   cooldownSeconds?: number;
   run(ctx: CommandContext): Promise<void>;
 }
@@ -54,11 +57,20 @@ export interface ModuleMeta {
   alwaysOn?: boolean;
 }
 
+/** A module's `/config <module>` subcommand group. Lives in `src/modules/<name>/config.ts`. */
+export interface ConfigSection {
+  build(group: SlashCommandSubcommandGroupBuilder): SlashCommandSubcommandGroupBuilder;
+  run(ctx: CommandContext): Promise<void>;
+  /** One short line for /config view, like "2 feeds". */
+  view?(guildId: string): Promise<string>;
+}
+
 export interface LoadedModule {
   meta: ModuleMeta;
   commands: Command[];
   events: EventHandler[];
   jobs: JobHandler[];
+  config: ConfigSection | null;
 }
 
 export interface Registry {

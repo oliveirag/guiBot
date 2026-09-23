@@ -59,7 +59,7 @@ export function fakeModule(
   meta: Partial<ModuleMeta> = {},
   events: EventHandler[] = [],
 ): LoadedModule {
-  return { meta: { name, description: `${name} module`, ...meta }, commands, events, jobs: [] };
+  return { meta: { name, description: `${name} module`, ...meta }, commands, events, jobs: [], config: null };
 }
 
 export function testEnv(overrides: Partial<Env> = {}): Env {

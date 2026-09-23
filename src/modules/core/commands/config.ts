@@ -1,40 +1,27 @@
-import { InteractionContextType, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { command } from '../../../core/define.js';
 import { ok } from '../../../core/embeds.js';
-import { getDisabledModules } from '../../../core/guildConfig.js';
-import { buildConfigView, toggleModule } from '../lib/config.js';
+import { getDisabledModules, isModuleEnabled } from '../../../core/guildConfig.js';
+import {
+  buildConfigView,
+  configCommandData,
+  runConfigSection,
+  sectionSummaries,
+  toggleModule,
+} from '../lib/config.js';
 
 export default command({
-  data: new SlashCommandBuilder()
-    .setName('config')
-    .setDescription('View or change guiBot settings for this server.')
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
-    .setContexts(InteractionContextType.Guild)
-    .addSubcommand((s) => s.setName('view').setDescription('Show current settings.'))
-    .addSubcommandGroup((g) =>
-      g
-        .setName('modules')
-        .setDescription('Turn modules on or off.')
-        .addSubcommand((s) =>
-          s
-            .setName('enable')
-            .setDescription('Turn a module on.')
-            .addStringOption((o) => o.setName('module').setDescription('Module name').setRequired(true)),
-        )
-        .addSubcommand((s) =>
-          s
-            .setName('disable')
-            .setDescription('Turn a module off.')
-            .addStringOption((o) => o.setName('module').setDescription('Module name').setRequired(true)),
-        ),
-    ),
+  data: configCommandData([]),
+  dataFor: configCommandData,
   guildOnly: true,
   memberPermissions: PermissionFlagsBits.ManageGuild,
-  async run({ interaction, registry }) {
+  async run(ctx) {
+    const { interaction, registry } = ctx;
     if (!interaction.inGuild()) return;
     const guildId = interaction.guildId;
+    const group = interaction.options.getSubcommandGroup(false);
 
-    if (interaction.options.getSubcommandGroup(false) === 'modules') {
+    if (group === 'modules') {
       const name = interaction.options.getString('module', true).trim().toLowerCase();
       const enabled = interaction.options.getSubcommand() === 'enable';
       await toggleModule(registry, guildId, name, enabled);
@@ -45,7 +32,13 @@ export default command({
       return;
     }
 
-    const view = buildConfigView(registry, await getDisabledModules(guildId));
+    if (group) {
+      await runConfigSection(ctx, guildId, group, isModuleEnabled);
+      return;
+    }
+
+    const disabled = await getDisabledModules(guildId);
+    const view = buildConfigView(registry, disabled, await sectionSummaries(registry, guildId, disabled));
     await interaction.reply({ embeds: [view], flags: MessageFlags.Ephemeral });
   },
 });
