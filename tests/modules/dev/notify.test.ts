@@ -102,9 +102,24 @@ describe('dev.notify', () => {
     await addFeed('g1', 'jira', 'SD', 'c1');
     await notify.run({ eventId: event.id, channelId: 'c1' }, ctx(fakeClient(null, apiError(10003)).client));
     expect(await prisma.devFeed.count()).toBe(0);
+    warn.mockRestore();
+  });
 
+  it('keeps feeds when the channel fetch comes back empty without an error', async () => {
+    const warn = vi.spyOn(log, 'warn').mockImplementation(() => {});
+    const event = await storeEvent();
     await addFeed('g1', 'github', 'o/r', 'c1');
     await notify.run({ eventId: event.id, channelId: 'c1' }, ctx(fakeClient(null).client));
+    expect(await prisma.devFeed.count()).toBe(1);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('drops feeds for a channel that can no longer take messages', async () => {
+    const warn = vi.spyOn(log, 'warn').mockImplementation(() => {});
+    const event = await storeEvent();
+    await addFeed('g1', 'github', 'o/r', 'c1');
+    await notify.run({ eventId: event.id, channelId: 'c1' }, ctx(fakeClient({ isSendable: () => false }).client));
     expect(await prisma.devFeed.count()).toBe(0);
     warn.mockRestore();
   });

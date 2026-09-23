@@ -46,7 +46,12 @@ export default job({
       if (await handled(error, channelId)) return;
       throw error;
     }
-    if (!channel?.isSendable()) {
+    // A null fetch isn't proof the channel is gone (only 10003 is), so keep the feed.
+    if (!channel) {
+      log.warn(`dev.notify: could not load channel ${channelId}, skipping this post`);
+      return;
+    }
+    if (!channel.isSendable()) {
       await dropChannel(channelId);
       return;
     }
