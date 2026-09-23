@@ -21,10 +21,12 @@ const pullRequestEvent = z.object({
 
 const workflowRunEvent = z.object({
   action: z.string(),
-  repository,
+  repository: repository.extend({ html_url: z.string().optional() }),
   workflow_run: z.object({
     name: z.string().nullish(),
     head_branch: z.string().nullish(),
+    head_sha: z.string().nullish(),
+    head_commit: z.object({ message: z.string() }).nullish(),
     conclusion: z.string().nullish(),
     html_url: z.string(),
     run_number: z.number(),
@@ -54,6 +56,26 @@ const pushEvent = z.object({
 });
 
 const FAILED = new Set(['failure', 'timed_out', 'startup_failure']);
+
+/** Branch, linked short commit, and who ran it, one per line. Null when the payload has none of them. */
+function failureDetail(
+  repoUrl: string | undefined,
+  branch: string | null | undefined,
+  sha: string | null | undefined,
+  message: string | undefined,
+  actor: string | null,
+): string | null {
+  const lines: string[] = [];
+  if (branch) lines.push(`**Branch** ${branch}`);
+  if (sha) {
+    const short = `\`${sha.slice(0, 7)}\``;
+    const commit = repoUrl ? `[${short}](${repoUrl}/commit/${sha})` : short;
+    const subject = message?.split('\n')[0]?.trim();
+    lines.push(`**Commit** ${commit}${subject ? ` ${subject}` : ''}`);
+  }
+  if (actor) lines.push(`**By** ${actor}`);
+  return lines.length > 0 ? lines.join('\n') : null;
+}
 
 function event(
   kind: DevEventKind,
@@ -95,11 +117,12 @@ export function normalizeGithub(name: string, payload: unknown): NormalizedEvent
       if (!parsed.success) return [];
       const { action, repository: repo, workflow_run: run } = parsed.data;
       if (action !== 'completed' || !FAILED.has(run.conclusion ?? '')) return [];
+      const actor = run.actor?.login ?? null;
       return [
-        event('workflow.failed', repo.full_name, run.actor?.login ?? null, {
+        event('workflow.failed', repo.full_name, actor, {
           title: `${run.name ?? 'Workflow'} #${run.run_number} failed`,
           url: run.html_url,
-          detail: run.head_branch ? `On ${run.head_branch}` : null,
+          detail: failureDetail(repo.html_url, run.head_branch, run.head_sha, run.head_commit?.message, actor),
         }),
       ];
     }

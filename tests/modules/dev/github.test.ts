@@ -47,13 +47,15 @@ describe('normalizeGithub', () => {
     expect(normalizeGithub('pull_request', { action: 'closed', repository, pull_request: pr() })).toEqual([]);
   });
 
-  it('reports failed workflow runs only', () => {
+  it('reports failed workflow runs only, with branch, commit, and who ran it', () => {
     const run = (conclusion: string) => ({
       action: 'completed',
-      repository,
+      repository: { ...repository, html_url: 'https://github.com/OliveiraG/guiBot' },
       workflow_run: {
         name: 'CI',
         head_branch: 'main',
+        head_sha: 'a1b2c3d4e5f6a7b8c9d0',
+        head_commit: { message: 'Fix login redirect\n\nLonger body here' },
         conclusion,
         html_url: 'https://github.com/x/actions/runs/1',
         run_number: 41,
@@ -61,10 +63,28 @@ describe('normalizeGithub', () => {
       },
     });
     expect(normalizeGithub('workflow_run', run('failure'))).toMatchObject([
-      { kind: 'workflow.failed', title: 'CI #41 failed', detail: 'On main', actor: 'gui' },
+      {
+        kind: 'workflow.failed',
+        title: 'CI #41 failed',
+        actor: 'gui',
+        detail: [
+          '**Branch** main',
+          '**Commit** [`a1b2c3d`](https://github.com/OliveiraG/guiBot/commit/a1b2c3d4e5f6a7b8c9d0) Fix login redirect',
+          '**By** gui',
+        ].join('\n'),
+      },
     ]);
     expect(normalizeGithub('workflow_run', run('success'))).toEqual([]);
     expect(normalizeGithub('workflow_run', run('cancelled'))).toEqual([]);
+  });
+
+  it('keeps failed-run details that are missing from the payload out of the embed', () => {
+    const [event] = normalizeGithub('workflow_run', {
+      action: 'completed',
+      repository,
+      workflow_run: { name: 'CI', conclusion: 'failure', html_url: 'https://github.com/x/actions/runs/2', run_number: 7 },
+    });
+    expect(event!.detail).toBeNull();
   });
 
   it('turns a published release into release.published', () => {
