@@ -10,18 +10,25 @@ export const MAX_FEEDS_PER_GUILD = 25;
 const GITHUB_REPO = /^[a-z0-9_.-]+\/[a-z0-9_.-]+$/;
 const JIRA_PROJECT = /^[A-Z][A-Z0-9_]+$/;
 
-export function normalizeTarget(source: FeedSource, raw: string): string {
-  const value = raw
+/** Pulls "owner/repo" out of whatever got pasted: a URL, an SSH remote, Discord's <link>, or plain text. */
+function githubRepo(raw: string): string {
+  const path = raw
     .trim()
-    .replace(/^https?:\/\/github\.com\//i, '')
-    .replace(/\/+$/, '')
-    .replace(/\.git$/i, '');
+    .replace(/^<(.*)>$/, '$1')
+    .replace(/^git@github\.com:/i, '')
+    .replace(/^(https?:\/\/)?(www\.)?github\.com\//i, '')
+    .replace(/\s*\/\s*/g, '/');
+  const [owner = '', repo = ''] = path.split('/').filter(Boolean);
+  return `${owner}/${repo.replace(/\.git$/i, '')}`.toLowerCase();
+}
+
+export function normalizeTarget(source: FeedSource, raw: string): string {
   if (source === 'github') {
-    const key = value.toLowerCase();
-    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like oliveirag/guiBot.');
+    const key = githubRepo(raw);
+    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like sducf/zaklang.');
     return key;
   }
-  const key = value.toUpperCase();
+  const key = raw.trim().toUpperCase();
   if (!JIRA_PROJECT.test(key)) throw new UserError('Use the Jira project key, like SD.');
   return key;
 }

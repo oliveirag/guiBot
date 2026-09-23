@@ -21,6 +21,24 @@ describe('normalizeTarget', () => {
     expect(normalizeTarget('github', ' https://github.com/oliveirag/guiBot.git/ ')).toBe('oliveirag/guibot');
   });
 
+  it('accepts the ways people actually paste a repo, including org repos', () => {
+    for (const raw of [
+      'sducf/zaklang',
+      'github.com/sducf/zaklang',
+      'https://www.github.com/sducf/zaklang',
+      'https://github.com/sducf/zaklang/tree/main',
+      '<https://github.com/sducf/zaklang>',
+      'git@github.com:sducf/zaklang.git',
+      'sducf / zaklang',
+    ]) {
+      expect(normalizeTarget('github', raw), raw).toBe('sducf/zaklang');
+    }
+  });
+
+  it('explains that a bare repo name needs its owner', () => {
+    expect(() => normalizeTarget('github', 'zaklang')).toThrow(/sducf\/zaklang|owner\/name/);
+  });
+
   it('uppercases Jira project keys', () => {
     expect(normalizeTarget('jira', 'sd')).toBe('SD');
   });
