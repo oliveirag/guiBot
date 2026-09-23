@@ -16,6 +16,7 @@ export interface SchedulerOptions {
   maxAttempts?: number;
   batchSize?: number;
   now?: () => Date;
+  jobTimeoutMs?: number;
 }
 
 const RETRY_STEP_MS = 60_000;
@@ -48,8 +49,10 @@ export class Scheduler {
     if (this.ticking) return 0;
     this.ticking = true;
     try {
+      const registeredTypes = [...this.handlers.keys()];
+      if (registeredTypes.length === 0) return 0;
       const due = await prisma.job.findMany({
-        where: { status: 'pending', runAt: { lte: this.now() } },
+        where: { status: 'pending', runAt: { lte: this.now() }, type: { in: registeredTypes } },
         orderBy: { runAt: 'asc' },
         take: this.opts.batchSize ?? 50,
       });
@@ -72,12 +75,19 @@ export class Scheduler {
   private async execute(id: number, type: string, payload: string, guildId: string | null, attempts: number) {
     const handler = this.handlers.get(type);
     if (!handler) {
-      await prisma.job.update({ where: { id }, data: { status: 'failed', lastError: `No handler for job type ${type}` } });
-      this.opts.log.warn(`job ${id}: no handler for ${type}`);
+      // tick() only selects jobs whose type has a registered handler, so this shouldn't happen.
+      this.opts.log.error(`job ${id}: no handler for ${type}`, new Error(`No handler for job type ${type}`));
       return;
     }
+    const timeoutMs = this.opts.jobTimeoutMs ?? 60_000;
+    let timer: NodeJS.Timeout | undefined;
     try {
-      await handler.run(JSON.parse(payload), { id, guildId });
+      await Promise.race([
+        handler.run(JSON.parse(payload), { id, guildId }),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Job timed out after ${timeoutMs}ms`)), timeoutMs);
+        }),
+      ]);
       await prisma.job.update({ where: { id }, data: { status: 'done' } });
     } catch (error) {
       const lastError = error instanceof Error ? error.message : String(error);
@@ -88,6 +98,8 @@ export class Scheduler {
         const runAt = new Date(this.now().getTime() + attempts * RETRY_STEP_MS);
         await prisma.job.update({ where: { id }, data: { status: 'pending', lastError, runAt } });
       }
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   }
 
