@@ -17,4 +17,4 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 # exec so node receives SIGTERM from Railway directly.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/deploy.js && exec node dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && (node dist/deploy.js || echo 'command deploy failed, starting anyway') && exec node dist/index.js"]

@@ -41,8 +41,12 @@ client.on(Events.InteractionCreate, (interaction) => {
 const scheduler = new Scheduler({ handlers: registry.modules.flatMap((m) => m.jobs), log });
 client.once(Events.ClientReady, async (ready) => {
   log.info(`Ready as ${ready.user.tag}`);
-  const recovered = await scheduler.recoverStale();
-  if (recovered > 0) log.warn(`Recovered ${recovered} stale jobs`);
+  try {
+    const recovered = await scheduler.recoverStale();
+    if (recovered > 0) log.warn(`Recovered ${recovered} stale jobs`);
+  } catch (error) {
+    log.error('stale job recovery failed', error);
+  }
   scheduler.start();
 });
 
@@ -52,13 +56,22 @@ log.info(`HTTP listening on ${env.port}`);
 
 await client.login(env.discordToken);
 
+let shuttingDown = false;
+
 async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
   log.info(`${signal} received, shutting down`);
-  await scheduler.stop();
-  await server.close();
-  await client.destroy();
-  await prisma.$disconnect();
-  process.exit(0);
+  try {
+    await scheduler.stop();
+    await server.close();
+    await client.destroy();
+    await prisma.$disconnect();
+  } catch (error) {
+    log.error('shutdown failed', error);
+  } finally {
+    process.exit(0);
+  }
 }
 
 process.on('SIGTERM', () => void shutdown('SIGTERM'));

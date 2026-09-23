@@ -40,5 +40,6 @@ To add a module, create `src/modules/<name>/index.ts` that exports `moduleMeta({
 - Add a volume mounted at `/data`.
 - Set these env vars: `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `OWNER_IDS`, `DATABASE_URL=file:/data/guibot.db`, `NODE_ENV=production`. Set `ENABLED_MODULES` too if you want to limit which modules load.
 - On boot the container runs migrations, registers global commands, then starts the bot. The healthcheck is `GET /health`.
+- If command registration fails on boot, the bot still starts; commands just stay whatever they were last registered as.
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
