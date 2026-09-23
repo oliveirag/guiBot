@@ -42,4 +42,17 @@ To add a module, create `src/modules/<name>/index.ts` that exports `moduleMeta({
 - On boot the container runs migrations, registers global commands, then starts the bot. The healthcheck is `GET /health`.
 - If command registration fails on boot, the bot still starts; commands just stay whatever they were last registered as.
 
+## GitHub and Jira notifications
+
+The `dev` module posts PRs opened/merged, failed workflow runs, releases, and Jira issue changes.
+
+1. Set `GITHUB_WEBHOOK_SECRET` and/or `JIRA_WEBHOOK_SECRET` to long random strings (`openssl rand -hex 32`).
+2. GitHub: repo Settings → Webhooks → Add webhook. Payload URL `https://<your-railway-domain>/webhooks/github`,
+   content type `application/json`, the same secret, and events: Pull requests, Workflow runs, Releases, Pushes.
+3. Jira: Settings → System → WebHooks → Create. URL `https://<your-railway-domain>/webhooks/jira`, the same
+   secret, events: Issue created and Issue updated.
+4. In Discord: `/config dev add source:GitHub target:owner/repo channel:#dev`, and the same with `source:Jira target:SD`.
+
+Pushes are stored but not posted. Senior Design stats use them later.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
