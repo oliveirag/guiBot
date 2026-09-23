@@ -54,7 +54,7 @@ await client.login(env.discordToken);
 
 async function shutdown(signal: string): Promise<void> {
   log.info(`${signal} received, shutting down`);
-  scheduler.stop();
+  await scheduler.stop();
   await server.close();
   await client.destroy();
   await prisma.$disconnect();

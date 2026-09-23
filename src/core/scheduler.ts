@@ -24,6 +24,7 @@ export class Scheduler {
   private readonly handlers = new Map<string, JobHandler>();
   private timer: NodeJS.Timeout | null = null;
   private ticking = false;
+  private current: Promise<number> | null = null;
 
   constructor(private readonly opts: SchedulerOptions) {
     for (const handler of opts.handlers) {
@@ -93,12 +94,22 @@ export class Scheduler {
   start(): void {
     if (this.timer) return;
     this.timer = setInterval(() => {
-      this.tick().catch((error) => this.opts.log.error('scheduler tick failed', error));
+      if (this.current) return;
+      const promise = this.tick().catch((error) => {
+        this.opts.log.error('scheduler tick failed', error);
+        return 0;
+      });
+      this.current = promise;
+      void promise.finally(() => {
+        this.current = null;
+      });
     }, this.opts.intervalMs ?? 15_000);
   }
 
-  stop(): void {
+  /** Clears the interval, then waits for any in-flight tick so shutdown doesn't race it. */
+  async stop(): Promise<void> {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    if (this.current) await this.current.catch(() => {});
   }
 }

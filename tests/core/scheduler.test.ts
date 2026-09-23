@@ -73,4 +73,32 @@ describe('Scheduler', () => {
     const handler: JobHandler = { type: 'test.ping', run: async () => {} };
     expect(() => make([handler, handler])).toThrow(/Duplicate job handler/);
   });
+
+  it('waits for an in-flight tick before stop resolves', async () => {
+    let started = false;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const handler: JobHandler = {
+      type: 'test.slow',
+      run: async () => {
+        started = true;
+        await gate;
+      },
+    };
+    const id = await scheduleJob('test.slow', secondsFrom(-1), null);
+    const scheduler = new Scheduler({ handlers: [handler], log: silentLog(), intervalMs: 10 });
+
+    scheduler.start();
+    await vi.waitFor(() => expect(started).toBe(true));
+
+    const stopping = scheduler.stop();
+    expect((await prisma.job.findUniqueOrThrow({ where: { id } })).status).toBe('running');
+
+    release();
+    await stopping;
+
+    expect((await prisma.job.findUniqueOrThrow({ where: { id } })).status).toBe('done');
+  });
 });
