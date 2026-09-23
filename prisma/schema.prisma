@@ -67,3 +67,11 @@ model DevEvent {
   @@index([source, key, createdAt])
   @@index([actor, createdAt])
 }
+
+// Per-guild dev module settings.
+model DevSettings {
+  guildId       String   @id
+  // Role pinged when a workflow fails. Null means no ping.
+  failureRoleId String?
+  updatedAt     DateTime @updatedAt
+}

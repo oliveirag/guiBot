@@ -6,6 +6,7 @@ import { prisma } from '../../../db.js';
 import { removeFeedsForChannel } from '../lib/feeds.js';
 import { NOTIFY_JOB } from '../lib/ingest.js';
 import { renderEvent } from '../lib/render.js';
+import { getFailureRole } from '../lib/settings.js';
 
 const payloadSchema = z.object({ eventId: z.number().int(), channelId: z.string() });
 
@@ -34,7 +35,7 @@ async function handled(error: unknown, channelId: string): Promise<boolean> {
 
 export default job({
   type: NOTIFY_JOB,
-  async run(payload, { client }) {
+  async run(payload, { client, guildId }) {
     const { eventId, channelId } = payloadSchema.parse(payload);
     const event = await prisma.devEvent.findUnique({ where: { id: eventId } });
     if (!event) return;
@@ -56,8 +57,11 @@ export default job({
       return;
     }
 
+    const roleId = event.kind === 'workflow.failed' && guildId ? await getFailureRole(guildId) : null;
+    const ping = roleId ? { content: `<@&${roleId}>`, allowedMentions: { roles: [roleId] } } : {};
+
     try {
-      await channel.send({ embeds: [renderEvent(event)] });
+      await channel.send({ embeds: [renderEvent(event)], ...ping });
     } catch (error) {
       if (await handled(error, channelId)) return;
       throw error;

@@ -5,6 +5,7 @@ export async function resetDb(): Promise<void> {
   await prisma.job.deleteMany();
   await prisma.devEvent.deleteMany();
   await prisma.devFeed.deleteMany();
+  await prisma.devSettings.deleteMany();
   await prisma.guildConfig.deleteMany();
   clearGuildConfigCache();
 }

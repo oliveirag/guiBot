@@ -7,6 +7,7 @@ import { prisma } from '../../../src/db.js';
 import notify from '../../../src/modules/dev/jobs/notify.js';
 import { addFeed } from '../../../src/modules/dev/lib/feeds.js';
 import { renderEvent } from '../../../src/modules/dev/lib/render.js';
+import { setFailureRole } from '../../../src/modules/dev/lib/settings.js';
 import { resetDb } from '../../db.js';
 
 let seq = 0;
@@ -87,6 +88,28 @@ describe('dev.notify', () => {
     expect(fetch).toHaveBeenCalledWith('c1');
     const embed = (send.mock.calls[0]![0] as { embeds: { toJSON(): { title?: string } }[] }).embeds[0]!.toJSON();
     expect(embed.title).toBe('#1 Ship it');
+  });
+
+  it('pings the failure role on failed workflows, and only mentions that role', async () => {
+    await setFailureRole('g1', 'r1');
+    const event = await storeEvent({ kind: 'workflow.failed' });
+    const { channel, send } = sendable();
+    await notify.run({ eventId: event.id, channelId: 'c1' }, ctx(fakeClient(channel).client));
+    expect(send.mock.calls[0]![0]).toMatchObject({ content: '<@&r1>', allowedMentions: { roles: ['r1'] } });
+  });
+
+  it('does not ping for other events or when no role is set', async () => {
+    await setFailureRole('g1', 'r1');
+    const merged = await storeEvent();
+    const first = sendable();
+    await notify.run({ eventId: merged.id, channelId: 'c1' }, ctx(fakeClient(first.channel).client));
+    expect(first.send.mock.calls[0]![0]).not.toHaveProperty('content');
+
+    await setFailureRole('g1', null);
+    const failed = await storeEvent({ kind: 'workflow.failed' });
+    const second = sendable();
+    await notify.run({ eventId: failed.id, channelId: 'c1' }, ctx(fakeClient(second.channel).client));
+    expect(second.send.mock.calls[0]![0]).not.toHaveProperty('content');
   });
 
   it('does nothing when the event row is gone', async () => {

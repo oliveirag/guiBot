@@ -1,9 +1,10 @@
-import { ChannelType, MessageFlags } from 'discord.js';
+import { ChannelType, MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { configSection } from '../../core/define.js';
 import { info, ok } from '../../core/embeds.js';
 import { UserError } from '../../core/errors.js';
 import { prisma } from '../../db.js';
 import { SOURCE_LABEL, addFeed, canPost, describeFeeds, listFeeds, removeFeed } from './lib/feeds.js';
+import { getFailureRole, mentionProblem, setFailureRole } from './lib/settings.js';
 import type { FeedSource } from './lib/types.js';
 
 const SOURCES = [
@@ -43,15 +44,38 @@ export default configSection({
             o.setName('target').setDescription('GitHub owner/repo or Jira project key').setRequired(true),
           ),
       )
-      .addSubcommand((s) => s.setName('list').setDescription('Show where each repo and project posts.')),
+      .addSubcommand((s) => s.setName('list').setDescription('Show where each repo and project posts.'))
+      .addSubcommand((s) =>
+        s
+          .setName('failure-ping')
+          .setDescription('Ping a role when a GitHub workflow fails. Leave role empty to stop.')
+          .addRoleOption((o) => o.setName('role').setDescription('Role to ping')),
+      ),
 
   async run({ interaction }) {
     if (!interaction.inCachedGuild()) throw new UserError('Run this in a server.');
     const guildId = interaction.guildId;
     const sub = interaction.options.getSubcommand();
 
+    if (sub === 'failure-ping') {
+      const role = interaction.options.getRole('role');
+      if (!role) {
+        await setFailureRole(guildId, null);
+        await interaction.reply({ embeds: [ok('Failed workflows won\'t ping anyone now.')], flags: MessageFlags.Ephemeral });
+        return;
+      }
+      const canMentionAll = interaction.guild.members.me?.permissions.has(PermissionFlagsBits.MentionEveryone) ?? false;
+      const problem = mentionProblem(role, canMentionAll);
+      if (problem) throw new UserError(problem);
+      await setFailureRole(guildId, role.id);
+      await interaction.reply({ embeds: [ok(`Failed workflows will ping ${role}.`)], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
     if (sub === 'list') {
-      const embed = info(describeFeeds(await listFeeds(guildId)), 'Dev feeds').setFooter({
+      const roleId = await getFailureRole(guildId);
+      const pingLine = `\n\nFailure ping: ${roleId ? `<@&${roleId}>` : 'off'}`;
+      const embed = info(describeFeeds(await listFeeds(guildId)) + pingLine, 'Dev feeds').setFooter({
         text: 'Webhooks go to POST /webhooks/github and /webhooks/jira',
       });
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
