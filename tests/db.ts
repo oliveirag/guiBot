@@ -3,6 +3,7 @@ import { clearGuildConfigCache } from '../src/core/guildConfig.js';
 
 export async function resetDb(): Promise<void> {
   await prisma.job.deleteMany();
+  await prisma.aiSettings.deleteMany();
   await prisma.sdRsvp.deleteMany();
   await prisma.sdMeeting.deleteMany();
   await prisma.sdStandupEntry.deleteMany();

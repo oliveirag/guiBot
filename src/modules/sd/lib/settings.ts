@@ -19,6 +19,7 @@ export function defaultSettings(guildId: string): SdSettings {
     digestDay: 5,
     digestTime: '17:00',
     digestVersion: 0,
+    aiDigest: false,
     updatedAt: new Date(0),
   };
 }

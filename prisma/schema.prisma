@@ -113,6 +113,8 @@ model SdSettings {
   digestDay          Int      @default(5)
   digestTime         String   @default("17:00")
   digestVersion      Int      @default(0)
+  // Adds an AI-written status paragraph to the digest.
+  aiDigest           Boolean  @default(false)
   updatedAt          DateTime @updatedAt
 }
 
@@ -185,4 +187,13 @@ model SdRsvp {
   updatedAt DateTime  @updatedAt
 
   @@id([meetingId, userId])
+}
+
+// Per-guild AI settings. AI only answers in listed channels.
+model AiSettings {
+  guildId         String   @id
+  // Comma-separated channel ids where /ask and mentions get answers.
+  channelIds      String   @default("")
+  cooldownSeconds Int      @default(20)
+  updatedAt       DateTime @updatedAt
 }

@@ -48,6 +48,12 @@ export default configSection({
       .addSubcommand((s) => s.setName('digest-off').setDescription('Stop the weekly digest.'))
       .addSubcommand((s) =>
         s
+          .setName('digest-ai')
+          .setDescription('Add a short AI-written status paragraph to the weekly digest.')
+          .addBooleanOption((o) => o.setName('enabled').setDescription('On or off').setRequired(true)),
+      )
+      .addSubcommand((s) =>
+        s
           .setName('deadlines')
           .setDescription('Where deadline reminders and the upcoming board post.')
           .addChannelOption((o) =>
@@ -62,7 +68,7 @@ export default configSection({
       )
       .addSubcommand((s) => s.setName('show').setDescription('Show Senior Design settings.')),
 
-  async run({ interaction }) {
+  async run({ interaction, env }) {
     if (!interaction.inCachedGuild()) throw new UserError('Run this in a server.');
     const guildId = interaction.guildId;
     const sub = interaction.options.getSubcommand();
@@ -81,6 +87,13 @@ export default configSection({
         await disableDigest(guildId);
         await reply('The weekly digest is off.');
         return;
+      case 'digest-ai': {
+        const enabled = interaction.options.getBoolean('enabled', true);
+        await updateSettings(guildId, { aiDigest: enabled });
+        const warn = enabled && !env.gemini ? " Heads up: GEMINI_API_KEY isn't set, so it'll be skipped." : '';
+        await reply(`The AI status paragraph is ${enabled ? 'on' : 'off'}.${warn}`);
+        return;
+      }
       case 'deadlines': {
         const channel = postableChannel(interaction);
         await updateSettings(guildId, { deadlineChannelId: channel.id, boardMessageId: null });
@@ -116,7 +129,7 @@ export default configSection({
         const lines = [
           `**Timezone** ${s.timezone}`,
           `**Standups** ${standup}`,
-          `**Digest** ${s.digestChannelId ? `<#${s.digestChannelId}> ${weekdayLabel(s.digestDay)} at ${s.digestTime}` : 'off'}`,
+          `**Digest** ${s.digestChannelId ? `<#${s.digestChannelId}> ${weekdayLabel(s.digestDay)} at ${s.digestTime}${s.aiDigest ? ', with AI summary' : ''}` : 'off'}`,
           `**Deadlines** ${s.deadlineChannelId ? `<#${s.deadlineChannelId}>` : 'no channel, so no reminders'}`,
           `**Team** ${await prisma.sdMember.count({ where: { guildId } })} linked`,
         ];

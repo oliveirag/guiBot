@@ -78,6 +78,7 @@ Stats come from the GitHub and Jira events above, so set those feeds up first.
 Settings live in `/config sd`:
 
 - `digest channel [day] [time]`: a weekly post of who did what and what's due. `digest-off` stops it.
+- `digest-ai enabled`: adds a short AI-written status paragraph on top of the digest (needs `GEMINI_API_KEY`).
 - `deadlines channel`: where deadline reminders and the board go.
 - `timezone zone`: for schedules and the dates people type. Defaults to America/New_York.
 - `show`: current settings.
@@ -85,5 +86,17 @@ Settings live in `/config sd`:
 `/sprint` and Jira email lookup in `/team link` need read-only API access: set `JIRA_BASE_URL`
 (`https://<site>.atlassian.net`), `JIRA_EMAIL`, and `JIRA_API_TOKEN` (from id.atlassian.com, API tokens).
 Without them, people can paste their Jira profile link into `/team link` instead of an email.
+
+## AI
+
+The `ai` module answers in Gui's voice with Gemini. Set `GEMINI_API_KEY` (and optionally `GEMINI_MODEL`,
+default `gemini-2.5-flash`).
+
+- `/ask question`: answers in the channel. It reads the last 15 messages there for context.
+- @mention guiBot or reply to one of its messages to talk to it.
+- In a server with Senior Design set up, it also sees the active sprint, deadlines, and recent GitHub/Jira activity.
+
+It's off everywhere until you turn it on: `/config ai channel #channel enabled:true` (threads follow their
+channel). `/config ai cooldown seconds` sets the per-person wait (default 20s, owners skip it).
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
