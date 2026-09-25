@@ -5,7 +5,7 @@ import { UserError } from '../../core/errors.js';
 import { MAX_AI_CHANNELS, getAiConfig, setAiChannel, setAiCooldown } from './lib/settings.js';
 
 const channelList = (ids: ReadonlySet<string>): string =>
-  ids.size > 0 ? [...ids].map((id) => `<#${id}>`).join(', ') : 'none';
+  ids.size > 0 ? `on everywhere except ${[...ids].map((id) => `<#${id}>`).join(', ')}` : 'on everywhere';
 
 export default configSection({
   build: (g) =>
@@ -13,7 +13,7 @@ export default configSection({
       .addSubcommand((s) =>
         s
           .setName('channel')
-          .setDescription('Turn AI replies (/ask and @mentions) on or off in a channel. Threads follow their channel.')
+          .setDescription('AI replies (/ask and @mentions) are on everywhere. Turn them off or back on in a channel.')
           .addChannelOption((o) =>
             o
               .setName('channel')
@@ -45,7 +45,7 @@ export default configSection({
         try {
           await setAiChannel(guildId, channel.id, enabled);
         } catch (error) {
-          if (error instanceof RangeError) throw new UserError(`AI can be on in at most ${MAX_AI_CHANNELS} channels.`);
+          if (error instanceof RangeError) throw new UserError(`AI can be off in at most ${MAX_AI_CHANNELS} channels.`);
           throw error;
         }
         const warn = env.gemini ? '' : ' Heads up: GEMINI_API_KEY isn\'t set, so nothing will answer yet.';
@@ -61,7 +61,7 @@ export default configSection({
       default: {
         const config = await getAiConfig(guildId);
         const lines = [
-          `**Channels** ${channelList(config.channelIds)}`,
+          `**Channels** ${channelList(config.offChannelIds)}`,
           `**Cooldown** ${config.cooldownSeconds}s per person`,
           `**Model** ${env.gemini ? env.gemini.model : 'not set up (GEMINI_API_KEY missing)'}`,
         ];
@@ -72,6 +72,7 @@ export default configSection({
 
   async view(guildId) {
     const config = await getAiConfig(guildId);
-    return `${config.channelIds.size} channel${config.channelIds.size === 1 ? '' : 's'} · ${config.cooldownSeconds}s cooldown`;
+    const off = config.offChannelIds.size;
+    return `${off > 0 ? `off in ${off} channel${off === 1 ? '' : 's'}` : 'on everywhere'} · ${config.cooldownSeconds}s cooldown`;
   },
 });

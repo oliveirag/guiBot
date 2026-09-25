@@ -67,7 +67,6 @@ export default configSection({
         const lines = [
           `**DM on action** ${s.dmOnAction ? 'on' : 'off'}`,
           `**Escalation** ${escalate}`,
-          `**Lockdown** ${s.lockedChannels ? 'on' : 'off'}`,
         ];
         await interaction.reply({ embeds: [info(lines.join('\n'), 'Moderation')], flags: MessageFlags.Ephemeral });
       }

@@ -136,6 +136,13 @@ export function findViolation({ facts, history, rules, words, allowedDomains }: 
   return null;
 }
 
+// Spam and duplicates are about sending, so edits only face the content rules.
+const SEND_RULES: readonly RuleName[] = ['spam', 'duplicates'];
+
+export function editRules(rules: ReadonlyMap<RuleName, RuleConfig>): Map<RuleName, RuleConfig> {
+  return new Map([...rules].filter(([rule]) => !SEND_RULES.includes(rule)));
+}
+
 /** Whether a new account is too young to join, per the newaccount rule. */
 export function tooNew(accountCreated: Date, minDays: number, now = new Date()): boolean {
   return now.getTime() - accountCreated.getTime() < minDays * 86_400_000;

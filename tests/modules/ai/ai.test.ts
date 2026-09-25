@@ -130,16 +130,16 @@ describe('projectSnapshot', () => {
 
 describe('settings and gate', () => {
   it('toggles channels and cooldown', async () => {
-    expect(await getAiConfig(G)).toEqual({ channelIds: new Set(), cooldownSeconds: 20 });
-    await setAiChannel(G, 'c1', true);
-    await setAiChannel(G, 'c2', true);
+    expect(await getAiConfig(G)).toEqual({ offChannelIds: new Set(), cooldownSeconds: 20 });
     await setAiChannel(G, 'c1', false);
+    await setAiChannel(G, 'c2', false);
+    await setAiChannel(G, 'c1', true);
     await setAiCooldown(G, 5);
-    expect(await getAiConfig(G)).toEqual({ channelIds: new Set(['c2']), cooldownSeconds: 5 });
+    expect(await getAiConfig(G)).toEqual({ offChannelIds: new Set(['c2']), cooldownSeconds: 5 });
   });
 
-  it('blocks off channels, then cools people down, but not owners', async () => {
-    await setAiChannel(G, 'c1', true);
+  it('is on by default, blocks off channels, then cools people down, but not owners', async () => {
+    await setAiChannel(G, 'c2', false);
     const cd = new Cooldowns(() => 1_000);
     expect(await checkGate(G, 'c2', 'u', [], cd)).toEqual({ allowed: false, reason: 'off' });
     expect(await checkGate(G, 'c1', 'u', [], cd)).toEqual({ allowed: true });

@@ -4,6 +4,7 @@ import {
   Tracker,
   bannedWordIn,
   capsPercent,
+  editRules,
   findViolation,
   hostAllowed,
   tooNew,
@@ -90,6 +91,12 @@ describe('findViolation', () => {
     tracker.forget('u');
     for (let i = 0; i < 4; i++) expect(send(`msg ${i}`, 100_000 + i * 100)).toBeNull();
     expect(send('msg 5', 100_500)?.rule).toBe('spam');
+  });
+
+  it('only checks content rules on edits', () => {
+    const edits = editRules(rules('spam', 'duplicates', 'words', 'links'));
+    expect([...edits.keys()]).toEqual(['words', 'links']);
+    expect(check('edited in a noob', [], { rules: edits, words: ['noob'], history: [] })?.rule).toBe('words');
   });
 });
 

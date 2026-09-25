@@ -4,7 +4,8 @@ export const DEFAULT_COOLDOWN = 20;
 export const MAX_AI_CHANNELS = 25;
 
 export interface AiConfig {
-  channelIds: ReadonlySet<string>;
+  /** AI answers everywhere except these. */
+  offChannelIds: ReadonlySet<string>;
   cooldownSeconds: number;
 }
 
@@ -12,17 +13,17 @@ const parse = (csv: string): Set<string> => new Set(csv.split(',').filter(Boolea
 
 export async function getAiConfig(guildId: string): Promise<AiConfig> {
   const row = await prisma.aiSettings.findUnique({ where: { guildId } });
-  return { channelIds: parse(row?.channelIds ?? ''), cooldownSeconds: row?.cooldownSeconds ?? DEFAULT_COOLDOWN };
+  return { offChannelIds: parse(row?.offChannelIds ?? ''), cooldownSeconds: row?.cooldownSeconds ?? DEFAULT_COOLDOWN };
 }
 
-/** Turns AI on or off in one channel. Returns the channels it's on in afterwards. */
+/** Turns AI on or off in one channel. Returns the channels it's off in afterwards. */
 export async function setAiChannel(guildId: string, channelId: string, on: boolean): Promise<ReadonlySet<string>> {
-  const next = new Set((await getAiConfig(guildId)).channelIds);
-  if (on) next.add(channelId);
-  else next.delete(channelId);
-  if (next.size > MAX_AI_CHANNELS) throw new RangeError(`AI can be on in at most ${MAX_AI_CHANNELS} channels`);
-  const channelIds = [...next].join(',');
-  await prisma.aiSettings.upsert({ where: { guildId }, create: { guildId, channelIds }, update: { channelIds } });
+  const next = new Set((await getAiConfig(guildId)).offChannelIds);
+  if (on) next.delete(channelId);
+  else next.add(channelId);
+  if (next.size > MAX_AI_CHANNELS) throw new RangeError(`AI can be off in at most ${MAX_AI_CHANNELS} channels`);
+  const offChannelIds = [...next].join(',');
+  await prisma.aiSettings.upsert({ where: { guildId }, create: { guildId, offChannelIds }, update: { offChannelIds } });
   return next;
 }
 

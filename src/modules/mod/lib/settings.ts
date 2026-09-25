@@ -14,7 +14,6 @@ export async function getModSettings(guildId: string): Promise<ModSettings> {
       warnThreshold: null,
       warnAction: null,
       warnDuration: null,
-      lockedChannels: '',
       updatedAt: new Date(0),
     }
   );

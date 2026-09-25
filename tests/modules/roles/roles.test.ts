@@ -4,7 +4,7 @@ import { UserError } from '../../../src/core/errors.js';
 import { prisma } from '../../../src/db.js';
 import { parseEmoji, reactionKey, roleProblem } from '../../../src/modules/roles/lib/assignable.js';
 import { giveAutoRoles } from '../../../src/modules/roles/lib/autoroles.js';
-import { addOption, createPanel, getPanel, removeOption, renderPanel, selectionChanges } from '../../../src/modules/roles/lib/panels.js';
+import { addOption, buttonChanges, createPanel, getPanel, removeOption, renderPanel, selectionChanges } from '../../../src/modules/roles/lib/panels.js';
 import { applyReaction, parseMessageLink } from '../../../src/modules/roles/lib/reactions.js';
 import { resetDb } from '../../db.js';
 
@@ -47,7 +47,7 @@ describe('emoji and links', () => {
 
 describe('panels', () => {
   it('adds, updates, removes, and renders buttons in rows of five', async () => {
-    const panel = await createPanel({ guildId: G, channelId: 'c', title: 'Pick', description: null, style: 'buttons' });
+    const panel = await createPanel({ guildId: G, channelId: 'c', title: 'Pick', description: null, style: 'buttons', exclusive: false });
     expect(renderPanel(panel).components).toEqual([]);
     let current = panel;
     for (let i = 0; i < 6; i++) current = await addOption(current, `r${i}`, `Role ${i}`, i === 0 ? '🔵' : null);
@@ -66,7 +66,7 @@ describe('panels', () => {
 
   it('renders a dropdown for select panels', async () => {
     const panel = await addOption(
-      await createPanel({ guildId: G, channelId: 'c', title: 'Pick', description: 'd', style: 'select' }),
+      await createPanel({ guildId: G, channelId: 'c', title: 'Pick', description: 'd', style: 'select', exclusive: false }),
       'r1',
       'One',
       null,
@@ -77,6 +77,20 @@ describe('panels', () => {
 
   it('works out select changes, ignoring roles not on the panel', () => {
     expect(selectionChanges(new Set(['a', 'x']), ['a', 'b', 'c'], ['b', 'zzz'])).toEqual({ add: ['b'], remove: ['a'] });
+  });
+
+  it('swaps roles on one-only panels', async () => {
+    expect(buttonChanges(new Set(['a', 'x']), ['a', 'b'], 'b', true)).toEqual({ add: ['b'], remove: ['a'] });
+    expect(buttonChanges(new Set(['a', 'x']), ['a', 'b'], 'b', false)).toEqual({ add: ['b'], remove: [] });
+    expect(buttonChanges(new Set(['a']), ['a', 'b'], 'a', true)).toEqual({ add: [], remove: ['a'] });
+    const panel = await addOption(
+      await addOption(await createPanel({ guildId: G, channelId: 'c', title: 'Colors', description: null, style: 'select', exclusive: true }), 'r1', 'Red', null),
+      'r2',
+      'Blue',
+      null,
+    );
+    const row = (renderPanel(panel).components![0] as { toJSON(): { components: { max_values: number }[] } }).toJSON();
+    expect(row.components[0]!.max_values).toBe(1);
   });
 });
 

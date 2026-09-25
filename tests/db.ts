@@ -17,7 +17,6 @@ export async function resetDb(): Promise<void> {
   await prisma.reactionRole.deleteMany();
   await prisma.autoRole.deleteMany();
   await prisma.welcomeSettings.deleteMany();
-  await prisma.birthday.deleteMany();
   await prisma.suggestionVote.deleteMany();
   await prisma.suggestion.deleteMany();
   await prisma.suggestionSettings.deleteMany();

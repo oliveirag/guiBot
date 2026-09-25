@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, type GuildBasedChannel, type Role } from 'discord.js';
+import type { GuildBasedChannel, Role } from 'discord.js';
 
 const FOURTEEN_DAYS = 14 * 86_400_000;
 const LINK = /https?:\/\/\S+/i;
@@ -37,11 +37,6 @@ type Lockable = Extract<GuildBasedChannel, { permissionOverwrites: unknown }>;
 
 export function isLockable(channel: GuildBasedChannel): channel is Lockable {
   return 'permissionOverwrites' in channel && (channel.isTextBased() || channel.isThreadOnly());
-}
-
-/** Whether @everyone can talk here right now. */
-export function everyoneCanSend(channel: Lockable, everyone: Role): boolean {
-  return channel.permissionsFor(everyone).has(PermissionFlagsBits.SendMessages);
 }
 
 /** Locks by denying @everyone, unlocks by clearing that deny (back to whatever the category says). */

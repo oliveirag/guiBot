@@ -192,8 +192,8 @@ model SdRsvp {
 // Per-guild AI settings. AI only answers in listed channels.
 model AiSettings {
   guildId         String   @id
-  // Comma-separated channel ids where /ask and mentions get answers.
-  channelIds      String   @default("")
+  // Comma-separated channel ids where /ask and mentions stay quiet. On everywhere else.
+  offChannelIds   String   @default("")
   cooldownSeconds Int      @default(20)
   updatedAt       DateTime @updatedAt
 }
@@ -243,8 +243,6 @@ model ModSettings {
   warnAction     String?
   // Seconds, for timeout or temp ban escalation.
   warnDuration   Int?
-  // Comma-separated channels /lockdown locked, so unlocking restores only those.
-  lockedChannels String   @default("")
   updatedAt      DateTime @updatedAt
 }
 
@@ -293,6 +291,8 @@ model RolePanel {
   description String?
   // buttons | select
   style       String            @default("buttons")
+  // Members can hold only one of this panel's roles, like color roles.
+  exclusive   Boolean           @default(false)
   createdAt   DateTime          @default(now())
   options     RolePanelOption[]
 
@@ -343,25 +343,7 @@ model WelcomeSettings {
   leaveChannelId    String?
   leaveMessage      String?
   leaveEmbed        Boolean  @default(false)
-  birthdayChannelId String?
-  // Given for the day, then taken back.
-  birthdayRoleId    String?
-  // Local "HH:MM".
-  birthdayTime      String   @default("09:00")
-  timezone          String   @default("America/New_York")
-  // Bumped when the birthday schedule changes so old jobs stop.
-  birthdayVersion   Int      @default(0)
   updatedAt         DateTime @updatedAt
-}
-
-model Birthday {
-  guildId String
-  userId  String
-  month   Int
-  day     Int
-
-  @@id([guildId, userId])
-  @@index([guildId, month, day])
 }
 
 model SuggestionSettings {

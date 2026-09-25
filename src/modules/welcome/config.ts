@@ -2,11 +2,7 @@ import { ChannelType, MessageFlags, type ChatInputCommandInteraction } from 'dis
 import { configSection } from '../../core/define.js';
 import { info, ok } from '../../core/embeds.js';
 import { UserError } from '../../core/errors.js';
-import { prisma } from '../../db.js';
 import { canPost } from '../dev/lib/feeds.js';
-import { assertAssignable } from '../roles/lib/assignable.js';
-import { formatClock, isValidTimeZone, parseClock, stamp } from '../sd/lib/time.js';
-import { scheduleNextBirthdays } from './lib/birthdays.js';
 import { DEFAULT_JOIN, DEFAULT_LEAVE, TEMPLATE_HELP, getWelcome, updateWelcome } from './lib/greet.js';
 
 const TEXT = [ChannelType.GuildText, ChannelType.GuildAnnouncement] as const;
@@ -46,16 +42,6 @@ export default configSection({
           .setDescription(`DM new members. Leave the message empty to stop. ${TEMPLATE_HELP}`)
           .addStringOption((o) => o.setName('message').setDescription('Message template').setMaxLength(1500)),
       )
-      .addSubcommand((s) =>
-        s
-          .setName('birthdays')
-          .setDescription('Post birthdays every day, and optionally give a role for the day.')
-          .addChannelOption((o) => o.setName('channel').setDescription('Where').setRequired(true).addChannelTypes(...TEXT))
-          .addRoleOption((o) => o.setName('role').setDescription('Birthday role for the day'))
-          .addStringOption((o) => o.setName('time').setDescription('Like 9am (default 09:00)'))
-          .addStringOption((o) => o.setName('timezone').setDescription('Like America/New_York')),
-      )
-      .addSubcommand((s) => s.setName('birthdays-off').setDescription('Stop birthday posts.'))
       .addSubcommand((s) => s.setName('show').setDescription('Show welcome settings.')),
 
   async run({ interaction }) {
@@ -98,50 +84,12 @@ export default configSection({
         await reply(message ? 'New members get a DM.' : 'No more welcome DMs.');
         return;
       }
-      case 'birthdays': {
-        const channel = postable(interaction);
-        const role = interaction.options.getRole('role');
-        if (role) await assertAssignable(interaction, role);
-        const zone = interaction.options.getString('timezone')?.trim();
-        if (zone && !isValidTimeZone(zone)) throw new UserError(`"${zone}" isn't a timezone I know. Try America/New_York.`);
-        const rawTime = interaction.options.getString('time');
-        const current = await getWelcome(guildId);
-        const now = new Date();
-        const at = await prisma.$transaction(async (tx) => {
-          const s = await tx.welcomeSettings.upsert({
-            where: { guildId },
-            create: { guildId },
-            update: {},
-          });
-          const updated = await tx.welcomeSettings.update({
-            where: { guildId },
-            data: {
-              birthdayChannelId: channel.id,
-              birthdayRoleId: role?.id ?? current?.birthdayRoleId ?? null,
-              ...(rawTime ? { birthdayTime: formatClock(parseClock(rawTime)) } : {}),
-              ...(zone ? { timezone: zone } : {}),
-              birthdayVersion: s.birthdayVersion + 1,
-            },
-          });
-          return scheduleNextBirthdays(updated, now, tx);
-        });
-        await reply(`Birthdays post in ${channel} every day${role ? ` and get ${role}` : ''}.${at ? ` Next check ${stamp(at, 'f')}.` : ''}`);
-        return;
-      }
-      case 'birthdays-off': {
-        const s = await getWelcome(guildId);
-        await updateWelcome(guildId, { birthdayChannelId: null, birthdayVersion: (s?.birthdayVersion ?? 0) + 1 });
-        await reply('Birthday posts are off. Saved birthdays stay saved.');
-        return;
-      }
       default: {
         const s = await getWelcome(guildId);
-        const birthdays = await prisma.birthday.count({ where: { guildId } });
         const lines = [
           `**Join** ${s?.joinChannelId ? `<#${s.joinChannelId}>${s.joinEmbed ? ' (embed)' : ''}\n> ${s.joinMessage ?? DEFAULT_JOIN}` : 'off'}`,
           `**Leave** ${s?.leaveChannelId ? `<#${s.leaveChannelId}>\n> ${s.leaveMessage ?? DEFAULT_LEAVE}` : 'off'}`,
           `**DM** ${s?.dmMessage ? `\n> ${s.dmMessage}` : 'off'}`,
-          `**Birthdays** ${s?.birthdayChannelId ? `<#${s.birthdayChannelId}> at ${s.birthdayTime} ${s.timezone}${s.birthdayRoleId ? ` · <@&${s.birthdayRoleId}>` : ''}` : 'off'} · ${birthdays} saved`,
         ];
         await interaction.reply({ embeds: [info(lines.join('\n').slice(0, 4096), 'Welcome')], flags: MessageFlags.Ephemeral });
       }
@@ -150,7 +98,7 @@ export default configSection({
 
   async view(guildId) {
     const s = await getWelcome(guildId);
-    const on = [s?.joinChannelId && 'join', s?.leaveChannelId && 'leave', s?.dmMessage && 'dm', s?.birthdayChannelId && 'birthdays'].filter(Boolean);
+    const on = [s?.joinChannelId && 'join', s?.leaveChannelId && 'leave', s?.dmMessage && 'dm'].filter(Boolean);
     return on.length > 0 ? on.join(', ') : 'nothing on';
   },
 });

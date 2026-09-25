@@ -38,6 +38,7 @@ export default command({
             .setDescription('Buttons (default) or a dropdown')
             .addChoices({ name: 'Buttons', value: 'buttons' }, { name: 'Dropdown', value: 'select' }),
         )
+        .addBooleanOption((o) => o.setName('one-only').setDescription('People can hold just one role from it, like colors (default no)'))
         .addChannelOption((o) =>
           o.setName('channel').setDescription('Default: this one').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement),
         ),
@@ -57,6 +58,13 @@ export default command({
         .setDescription('Take a role off a panel.')
         .addIntegerOption(panelOption)
         .addRoleOption((o) => o.setName('role').setDescription('Role').setRequired(true)),
+    )
+    .addSubcommand((s) =>
+      s
+        .setName('one-only')
+        .setDescription('Let people hold just one role from a panel, or any number.')
+        .addIntegerOption(panelOption)
+        .addBooleanOption((o) => o.setName('enabled').setDescription('One role only').setRequired(true)),
     )
     .addSubcommand((s) =>
       s.setName('delete').setDescription('Delete a panel and its message.').addIntegerOption(panelOption),
@@ -83,6 +91,7 @@ export default command({
           title: interaction.options.getString('title', true),
           description: interaction.options.getString('description'),
           style: (interaction.options.getString('style') ?? 'buttons') as 'buttons' | 'select',
+          exclusive: interaction.options.getBoolean('one-only') ?? false,
         });
         await publish(interaction.client, panel);
         await reply(`Panel #${panel.id} is up in ${channel}. Add roles with \`/rolepanel add panel:${panel.id}\`.`);
@@ -106,6 +115,18 @@ export default command({
         await reply(`${role} is off panel #${panel.id}.`);
         return;
       }
+      case 'one-only': {
+        const panel = await getPanel(guildId, interaction.options.getInteger('panel', true));
+        const exclusive = interaction.options.getBoolean('enabled', true);
+        await prisma.rolePanel.update({ where: { id: panel.id }, data: { exclusive } });
+        await publish(interaction.client, { ...panel, exclusive });
+        await reply(
+          exclusive
+            ? `Panel #${panel.id} is one role only now. People who already hold several keep them until they click.`
+            : `Panel #${panel.id} lets people pick any number of roles.`,
+        );
+        return;
+      }
       case 'delete': {
         const panel = await getPanel(guildId, interaction.options.getInteger('panel', true));
         await prisma.rolePanel.delete({ where: { id: panel.id } });
@@ -119,7 +140,7 @@ export default command({
       default: {
         const panels = await prisma.rolePanel.findMany({ where: { guildId }, include: { _count: { select: { options: true } } } });
         const body = panels.length
-          ? panels.map((p) => `\`#${p.id}\` **${p.title}** · <#${p.channelId}> · ${p._count.options} roles · ${p.style}`).join('\n')
+          ? panels.map((p) => `\`#${p.id}\` **${p.title}** · <#${p.channelId}> · ${p._count.options} roles · ${p.style}${p.exclusive ? ' · one only' : ''}`).join('\n')
           : 'No panels yet. Make one with `/rolepanel create`.';
         await interaction.reply({ embeds: [info(body, 'Role panels')], flags: MessageFlags.Ephemeral });
       }

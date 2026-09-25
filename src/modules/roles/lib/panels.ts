@@ -35,6 +35,7 @@ export async function createPanel(input: {
   title: string;
   description: string | null;
   style: 'buttons' | 'select';
+  exclusive: boolean;
 }): Promise<PanelWithOptions> {
   if ((await prisma.rolePanel.count({ where: { guildId: input.guildId } })) >= MAX_PANELS) {
     throw new UserError(`This server already has ${MAX_PANELS} role panels.`);
@@ -61,17 +62,20 @@ export async function removeOption(panel: PanelWithOptions, roleId: string): Pro
 }
 
 export function renderPanel(panel: PanelWithOptions): Pick<MessageCreateOptions, 'embeds' | 'components'> {
-  const lines = [panel.description ?? (panel.style === 'select' ? 'Pick your roles below.' : 'Click to toggle a role.')];
+  const fallback = panel.exclusive
+    ? panel.style === 'select' ? 'Pick one role below.' : 'Click a role. You can only have one.'
+    : panel.style === 'select' ? 'Pick your roles below.' : 'Click to toggle a role.';
+  const lines = [panel.description ?? fallback];
   if (panel.options.length === 0) lines.push('', '*No roles yet. Add some with `/rolepanel add`.*');
-  const embed = info(lines.join('\n'), panel.title).setFooter({ text: `Panel #${panel.id}` });
+  const embed = info(lines.join('\n'), panel.title).setFooter({ text: `Panel #${panel.id}${panel.exclusive ? ' · one role only' : ''}` });
   if (panel.options.length === 0) return { embeds: [embed], components: [] };
 
   if (panel.style === 'select') {
     const menu = new StringSelectMenuBuilder()
       .setCustomId(`${PANEL_PREFIX}${panel.id}`)
-      .setPlaceholder('Pick roles')
+      .setPlaceholder(panel.exclusive ? 'Pick a role' : 'Pick roles')
       .setMinValues(0)
-      .setMaxValues(panel.options.length)
+      .setMaxValues(panel.exclusive ? 1 : panel.options.length)
       .addOptions(
         panel.options.map((o) => ({ label: o.label.slice(0, 100), value: o.roleId, emoji: emojiOf(o.emoji) })),
       );
@@ -99,4 +103,10 @@ export function selectionChanges(has: ReadonlySet<string>, panelRoles: readonly 
     add: [...want].filter((r) => !has.has(r)),
     remove: panelRoles.filter((r) => has.has(r) && !want.has(r)),
   };
+}
+
+/** For a button click: toggles the role, and on exclusive panels takes the member's other panel roles away. */
+export function buttonChanges(has: ReadonlySet<string>, panelRoles: readonly string[], clicked: string, exclusive: boolean) {
+  if (has.has(clicked)) return { add: [] as string[], remove: [clicked] };
+  return { add: [clicked], remove: exclusive ? panelRoles.filter((r) => r !== clicked && has.has(r)) : [] };
 }

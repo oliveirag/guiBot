@@ -22,7 +22,7 @@ export async function checkGate(
   cooldowns: Cooldowns = aiCooldowns,
 ): Promise<Gate> {
   const config = await getAiConfig(guildId);
-  if (!config.channelIds.has(channelId)) return { allowed: false, reason: 'off' };
+  if (config.offChannelIds.has(channelId)) return { allowed: false, reason: 'off' };
   if (ownerIds.includes(userId) || config.cooldownSeconds <= 0) return { allowed: true };
   const left = cooldowns.hit(`ai:${guildId}:${userId}`, config.cooldownSeconds);
   return left > 0 ? { allowed: false, reason: 'cooldown', left } : { allowed: true };

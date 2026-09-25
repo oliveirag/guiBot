@@ -96,8 +96,8 @@ default `gemini-2.5-flash`).
 - @mention guiBot or reply to one of its messages to talk to it.
 - In a server with Senior Design set up, it also sees the active sprint, deadlines, and recent GitHub/Jira activity.
 
-It's off everywhere until you turn it on: `/config ai channel #channel enabled:true` (threads follow their
-channel). `/config ai cooldown seconds` sets the per-person wait (default 20s, owners skip it).
+It's on in every channel. Turn it off in one with `/config ai channel #channel enabled:false` (threads follow
+their channel). `/config ai cooldown seconds` sets the per-person wait (default 20s, owners skip it).
 
 ## Moderation
 
@@ -109,7 +109,7 @@ post in the modlog channel if `logs` has one.
 - `/warn user reason`, `/warnings user`, `/delwarn case`, `/clearwarns user`. `/config mod escalate warns action
   [duration]` punishes automatically at a warn count.
 - `/note add|list`, `/modlog case|edit|history`.
-- `/purge count [user] [bots] [links] [match]`, `/lock`, `/unlock`, `/lockdown on|off`, `/slowmode delay`.
+- `/purge count [user] [bots] [links] [match]`, `/lock`, `/unlock`, `/slowmode delay`.
 
 Bans made in Discord's own menu still get a case (the moderator shows up if guiBot has View Audit Log).
 
@@ -124,7 +124,8 @@ and `modlog` (cases). `/config logs off kind` stops one.
 The `automod` module. Every rule is off until you turn it on with `/config automod rule name enabled [action]
 [limit] [duration]`: `spam`, `duplicates`, `invites`, `links`, `words`, `mentions`, `caps`, `newaccount`.
 Actions are delete, warn (counts toward escalation), timeout, or kick. Message rules always delete first, and
-only the first hit in a burst gets punished.
+only the first hit in a burst gets punished. Edited messages get re-checked too (all rules but spam and
+duplicates).
 
 `words-add|words-remove`, `allow-link|disallow-link`, and `exempt role|channel` tune it. Anyone with Manage
 Messages is never checked. `/config automod show` lists what each rule's limit means.
@@ -133,8 +134,10 @@ Messages is never checked. `/config automod show` lists what each rule's limit m
 
 The `roles` module.
 
-- `/rolepanel create title [description] [style] [channel]` posts a panel (buttons or a dropdown), then
-  `/rolepanel add panel role [label] [emoji]`, `remove`, `delete`, `list`. Clicking toggles the role.
+- `/rolepanel create title [description] [style] [one-only] [channel]` posts a panel (buttons or a dropdown),
+  then `/rolepanel add panel role [label] [emoji]`, `remove`, `delete`, `list`. Clicking toggles the role.
+  One-only panels (like colors) swap roles instead: picking one takes away the others from that panel.
+  `/rolepanel one-only panel enabled` flips an existing panel.
 - `/reactionrole add message emoji role` (paste a message link), `remove`, `list`.
 - `/role add|remove user role`, `/role info role`, `/temprole user role duration`.
 - `/config roles autorole-add role [for]` gives a role to everyone who joins (people or bots). Waits for
@@ -148,8 +151,6 @@ The `welcome` module. Set it up in `/config welcome`:
 
 - `join channel [message] [embed]`, `leave channel [message] [embed]`, `dm [message]`. Messages take
   `{user}`, `{username}`, `{server}`, `{count}`. Only the new member gets pinged. Preview with `/welcome test`.
-- `birthdays channel [role] [time] [timezone]`: posts every day at `time` for anyone whose birthday it is, and
-  gives `role` for 24 hours. People save theirs with `/birthday set date`; `/birthday list` shows who's next.
 
 ## Suggestions
 
