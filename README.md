@@ -119,4 +119,14 @@ The `logs` module. Route each kind to a channel with `/config logs set kind chan
 `messages` (edits, deletes, purges), `members` (joins, leaves), `roles` (role and nickname changes), `voice`,
 and `modlog` (cases). `/config logs off kind` stops one.
 
+## Automod
+
+The `automod` module. Every rule is off until you turn it on with `/config automod rule name enabled [action]
+[limit] [duration]`: `spam`, `duplicates`, `invites`, `links`, `words`, `mentions`, `caps`, `newaccount`.
+Actions are delete, warn (counts toward escalation), timeout, or kick. Message rules always delete first, and
+only the first hit in a burst gets punished.
+
+`words-add|words-remove`, `allow-link|disallow-link`, and `exempt role|channel` tune it. Anyone with Manage
+Messages is never checked. `/config automod show` lists what each rule's limit means.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

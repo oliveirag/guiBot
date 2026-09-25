@@ -20,3 +20,9 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - `/lockdown on` locks every channel @everyone can currently talk in; `off` only unlocks those. No per-channel lockdown list. Want a fixed list instead?
 - Log kinds: messages, members, roles (incl. nicknames), voice, modlog. No "ignored channels" setting yet. Need one?
 - guiBot needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
+
+## Automod
+- All rules off by default. Default limits: spam 5 msgs/5s, duplicates 3 in 30s, mentions 5, caps 70% (10+ letters), new accounts 7 days.
+- Offenders get a short channel notice that deletes itself after 6s. Keep or drop?
+- newaccount with action delete/warn only flags the join in the modlog; kick/timeout act on it.
+- Message edits aren't re-checked (someone could edit a banned word in). Want that?

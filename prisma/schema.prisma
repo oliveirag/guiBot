@@ -256,3 +256,29 @@ model LogRoute {
 
   @@id([guildId, kind])
 }
+
+// One automod rule's settings. Rules: spam, duplicates, invites, links, words, mentions, caps, newaccount.
+model AutomodRule {
+  guildId  String
+  rule     String
+  enabled  Boolean @default(true)
+  // delete | warn | timeout | kick. Message rules always delete the message first.
+  action   String  @default("delete")
+  // Rule-specific limit: messages (spam, duplicates), mentions, caps percent, account age in days.
+  limit    Int?
+  // Timeout length in seconds.
+  duration Int?
+
+  @@id([guildId, rule])
+}
+
+model AutomodSettings {
+  guildId        String   @id
+  // One banned word or phrase per line, lowercased.
+  bannedWords    String   @default("")
+  // Comma-separated domains the links rule lets through.
+  allowedDomains String   @default("")
+  exemptRoles    String   @default("")
+  exemptChannels String   @default("")
+  updatedAt      DateTime @updatedAt
+}
