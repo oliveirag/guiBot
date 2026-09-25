@@ -332,3 +332,34 @@ model AutoRole {
 
   @@id([guildId, roleId, target])
 }
+
+model WelcomeSettings {
+  guildId           String   @id
+  joinChannelId     String?
+  joinMessage       String?
+  joinEmbed         Boolean  @default(true)
+  // Sent privately to new members. Null means off.
+  dmMessage         String?
+  leaveChannelId    String?
+  leaveMessage      String?
+  leaveEmbed        Boolean  @default(false)
+  birthdayChannelId String?
+  // Given for the day, then taken back.
+  birthdayRoleId    String?
+  // Local "HH:MM".
+  birthdayTime      String   @default("09:00")
+  timezone          String   @default("America/New_York")
+  // Bumped when the birthday schedule changes so old jobs stop.
+  birthdayVersion   Int      @default(0)
+  updatedAt         DateTime @updatedAt
+}
+
+model Birthday {
+  guildId String
+  userId  String
+  month   Int
+  day     Int
+
+  @@id([guildId, userId])
+  @@index([guildId, month, day])
+}

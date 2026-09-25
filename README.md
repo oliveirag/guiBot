@@ -142,4 +142,13 @@ The `roles` module.
 
 guiBot can only hand out roles below its own top role, and mods can only set up roles below theirs.
 
+## Welcome
+
+The `welcome` module. Set it up in `/config welcome`:
+
+- `join channel [message] [embed]`, `leave channel [message] [embed]`, `dm [message]`. Messages take
+  `{user}`, `{username}`, `{server}`, `{count}`. Only the new member gets pinged. Preview with `/welcome test`.
+- `birthdays channel [role] [time] [timezone]`: posts every day at `time` for anyone whose birthday it is, and
+  gives `role` for 24 hours. People save theirs with `/birthday set date`; `/birthday list` shows who's next.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

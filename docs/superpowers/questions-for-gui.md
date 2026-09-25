@@ -30,3 +30,8 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 ## Roles
 - Panels have no "max picks" or "only one role" (unique) mode yet. Want exclusive panels (like color roles)?
 - Temp roles live only as a scheduled job; there's no `/temprole list`. Fine?
+
+## Welcome
+- Join messages default to an embed; leave messages default to plain text. Default texts: "Welcome to **{server}**, {user}! You're member #{count}." / "**{username}** left. We're at {count} now."
+- Birthdays have their own timezone setting (default America/New_York), separate from `/config sd timezone`. Merge them into one server timezone?
+- Bots don't get welcome or leave messages.
