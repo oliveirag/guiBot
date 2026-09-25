@@ -160,3 +160,16 @@ there with 👍/👎 buttons (one vote each, click again to take it back) and a 
 closes voting.
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
+
+## Fun
+
+The `fun` module. No setup.
+
+- `/8ball question`, `/coinflip`, `/roll [dice]` (`d20`, `2d6`, `3d8+2`), `/choose options` (comma separated),
+  `/rps pick` against guiBot.
+- `/cat`, `/dog`, `/meme` pull from TheCatAPI, dog.ceo, and meme-api.com (NSFW and spoiler memes skipped).
+- `/ship first [second]` and `/rate thing` give the same score every time for the same inputs.
+- `/trivia [category] [difficulty]` from Open Trivia DB: everyone gets one guess, the answer and who got it
+  show after 20 seconds.
+- `/tictactoe [opponent]` with buttons. Leave opponent empty to play guiBot, which doesn't lose. The game lives
+  in the buttons, so it survives restarts.
