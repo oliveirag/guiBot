@@ -12,6 +12,10 @@ export async function resetDb(): Promise<void> {
   await prisma.logRoute.deleteMany();
   await prisma.automodRule.deleteMany();
   await prisma.automodSettings.deleteMany();
+  await prisma.rolePanelOption.deleteMany();
+  await prisma.rolePanel.deleteMany();
+  await prisma.reactionRole.deleteMany();
+  await prisma.autoRole.deleteMany();
   clearLogCache();
   clearAutomodCache();
   await prisma.sdRsvp.deleteMany();

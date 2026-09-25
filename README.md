@@ -129,4 +129,17 @@ only the first hit in a burst gets punished.
 `words-add|words-remove`, `allow-link|disallow-link`, and `exempt role|channel` tune it. Anyone with Manage
 Messages is never checked. `/config automod show` lists what each rule's limit means.
 
+## Roles
+
+The `roles` module.
+
+- `/rolepanel create title [description] [style] [channel]` posts a panel (buttons or a dropdown), then
+  `/rolepanel add panel role [label] [emoji]`, `remove`, `delete`, `list`. Clicking toggles the role.
+- `/reactionrole add message emoji role` (paste a message link), `remove`, `list`.
+- `/role add|remove user role`, `/role info role`, `/temprole user role duration`.
+- `/config roles autorole-add role [for]` gives a role to everyone who joins (people or bots). Waits for
+  membership screening if the server uses it.
+
+guiBot can only hand out roles below its own top role, and mods can only set up roles below theirs.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

@@ -26,3 +26,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Offenders get a short channel notice that deletes itself after 6s. Keep or drop?
 - newaccount with action delete/warn only flags the join in the modlog; kick/timeout act on it.
 - Message edits aren't re-checked (someone could edit a banned word in). Want that?
+
+## Roles
+- Panels have no "max picks" or "only one role" (unique) mode yet. Want exclusive panels (like color roles)?
+- Temp roles live only as a scheduled job; there's no `/temprole list`. Fine?

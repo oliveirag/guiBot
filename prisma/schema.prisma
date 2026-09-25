@@ -282,3 +282,53 @@ model AutomodSettings {
   exemptChannels String   @default("")
   updatedAt      DateTime @updatedAt
 }
+
+// A message people click to give themselves roles.
+model RolePanel {
+  id          Int               @id @default(autoincrement())
+  guildId     String
+  channelId   String
+  messageId   String?
+  title       String
+  description String?
+  // buttons | select
+  style       String            @default("buttons")
+  createdAt   DateTime          @default(now())
+  options     RolePanelOption[]
+
+  @@index([guildId])
+}
+
+model RolePanelOption {
+  panelId Int
+  panel   RolePanel @relation(fields: [panelId], references: [id], onDelete: Cascade)
+  roleId  String
+  label   String
+  // Unicode emoji or a custom emoji id.
+  emoji   String?
+  // Order on the panel.
+  position Int      @default(0)
+
+  @@id([panelId, roleId])
+}
+
+model ReactionRole {
+  guildId   String
+  channelId String
+  messageId String
+  // Unicode emoji or a custom emoji id.
+  emoji     String
+  roleId    String
+
+  @@id([messageId, emoji])
+  @@index([guildId])
+}
+
+// Roles given to everyone who joins. target: humans | bots
+model AutoRole {
+  guildId String
+  roleId  String
+  target  String
+
+  @@id([guildId, roleId, target])
+}
