@@ -197,3 +197,62 @@ model AiSettings {
   cooldownSeconds Int      @default(20)
   updatedAt       DateTime @updatedAt
 }
+
+// A moderation action. Numbered per guild so mods can say "case 12".
+model ModCase {
+  id           Int       @id @default(autoincrement())
+  guildId      String
+  number       Int
+  // ban | unban | kick | timeout | untimeout | warn
+  action       String
+  userId       String
+  userTag      String?
+  moderatorId  String
+  reason       String?
+  // Seconds, for temp bans and timeouts.
+  duration     Int?
+  expiresAt    DateTime?
+  // Warns turn inactive when deleted or cleared.
+  active       Boolean   @default(true)
+  logChannelId String?
+  logMessageId String?
+  createdAt    DateTime  @default(now())
+
+  @@unique([guildId, number])
+  @@index([guildId, userId, action])
+}
+
+model ModNote {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  userId    String
+  authorId  String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([guildId, userId])
+}
+
+model ModSettings {
+  guildId        String   @id
+  // DM people when they're warned, timed out, kicked, or banned.
+  dmOnAction     Boolean  @default(true)
+  // Active warns that trigger escalation. Null means off.
+  warnThreshold  Int?
+  // timeout | kick | ban
+  warnAction     String?
+  // Seconds, for timeout or temp ban escalation.
+  warnDuration   Int?
+  // Comma-separated channels /lockdown locked, so unlocking restores only those.
+  lockedChannels String   @default("")
+  updatedAt      DateTime @updatedAt
+}
+
+// Where each kind of log goes. Kinds: messages, members, roles, voice, modlog.
+model LogRoute {
+  guildId   String
+  kind      String
+  channelId String
+
+  @@id([guildId, kind])
+}

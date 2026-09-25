@@ -1,9 +1,15 @@
 import { prisma } from '../src/db.js';
 import { clearGuildConfigCache } from '../src/core/guildConfig.js';
+import { clearLogCache } from '../src/modules/logs/lib/routes.js';
 
 export async function resetDb(): Promise<void> {
   await prisma.job.deleteMany();
   await prisma.aiSettings.deleteMany();
+  await prisma.modCase.deleteMany();
+  await prisma.modNote.deleteMany();
+  await prisma.modSettings.deleteMany();
+  await prisma.logRoute.deleteMany();
+  clearLogCache();
   await prisma.sdRsvp.deleteMany();
   await prisma.sdMeeting.deleteMany();
   await prisma.sdStandupEntry.deleteMany();

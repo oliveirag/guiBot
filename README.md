@@ -99,4 +99,24 @@ default `gemini-2.5-flash`).
 It's off everywhere until you turn it on: `/config ai channel #channel enabled:true` (threads follow their
 channel). `/config ai cooldown seconds` sets the per-person wait (default 20s, owners skip it).
 
+## Moderation
+
+The `mod` module. Every action gets a case number, a DM to the person (turn off with `/config mod dm`), and a
+post in the modlog channel if `logs` has one.
+
+- `/ban user [reason] [duration] [delete]` (a duration makes it a temp ban), `/unban`, `/kick`,
+  `/timeout user duration`, `/untimeout`.
+- `/warn user reason`, `/warnings user`, `/delwarn case`, `/clearwarns user`. `/config mod escalate warns action
+  [duration]` punishes automatically at a warn count.
+- `/note add|list`, `/modlog case|edit|history`.
+- `/purge count [user] [bots] [links] [match]`, `/lock`, `/unlock`, `/lockdown on|off`, `/slowmode delay`.
+
+Bans made in Discord's own menu still get a case (the moderator shows up if guiBot has View Audit Log).
+
+## Logs
+
+The `logs` module. Route each kind to a channel with `/config logs set kind channel` (or `all`):
+`messages` (edits, deletes, purges), `members` (joins, leaves), `roles` (role and nickname changes), `voice`,
+and `modlog` (cases). `/config logs off kind` stops one.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

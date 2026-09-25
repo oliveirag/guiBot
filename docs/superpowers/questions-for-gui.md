@@ -12,3 +12,11 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - AI is off in every channel by default. Turn on per channel with `/config ai channel`.
 - Cooldown default 20s per user. Owners skip it.
 - Uses Gemini REST directly (no SDK), thinking disabled for speed, max ~600 output tokens.
+- `/ask` replies publicly and quotes the question on top. Mentions reply without pinging you back.
+
+## Moderation + logs
+- DMs on action are on by default (`/config mod dm`).
+- Escalation fires once, exactly when active warns hit the threshold (not again at threshold+1). Default timeout 1h if you don't give a duration.
+- `/lockdown on` locks every channel @everyone can currently talk in; `off` only unlocks those. No per-channel lockdown list. Want a fixed list instead?
+- Log kinds: messages, members, roles (incl. nicknames), voice, modlog. No "ignored channels" setting yet. Need one?
+- guiBot needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
