@@ -35,3 +35,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Join messages default to an embed; leave messages default to plain text. Default texts: "Welcome to **{server}**, {user}! You're member #{count}." / "**{username}** left. We're at {count} now."
 - Birthdays have their own timezone setting (default America/New_York), separate from `/config sd timezone`. Merge them into one server timezone?
 - Bots don't get welcome or leave messages.
+
+## Suggestions
+- Votes are buttons, not reactions, so each person gets one vote and counts can't be faked. `/suggest` has a 60s cooldown.
+- No anonymous suggestions and no separate "reviewed suggestions" channel. Want either?

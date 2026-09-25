@@ -151,4 +151,11 @@ The `welcome` module. Set it up in `/config welcome`:
 - `birthdays channel [role] [time] [timezone]`: posts every day at `time` for anyone whose birthday it is, and
   gives `role` for 24 hours. People save theirs with `/birthday set date`; `/birthday list` shows who's next.
 
+## Suggestions
+
+The `suggestions` module. `/config suggestions channel #channel [threads]` turns it on. `/suggest idea` posts
+there with 👍/👎 buttons (one vote each, click again to take it back) and a discussion thread.
+`/suggestion approve|deny|consider number [reason]` updates the post and tells the author. Approving or denying
+closes voting.
+
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.

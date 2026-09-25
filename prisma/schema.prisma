@@ -363,3 +363,40 @@ model Birthday {
   @@id([guildId, userId])
   @@index([guildId, month, day])
 }
+
+model SuggestionSettings {
+  guildId   String   @id
+  channelId String?
+  // Open a discussion thread on each suggestion.
+  threads   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model Suggestion {
+  id         Int              @id @default(autoincrement())
+  guildId    String
+  // Numbered per guild.
+  number     Int
+  authorId   String
+  content    String
+  // open | approved | denied | considered
+  status     String           @default("open")
+  reason     String?
+  reviewerId String?
+  channelId  String
+  messageId  String?
+  createdAt  DateTime         @default(now())
+  votes      SuggestionVote[]
+
+  @@unique([guildId, number])
+}
+
+model SuggestionVote {
+  suggestionId Int
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  userId       String
+  // 1 or -1
+  value        Int
+
+  @@id([suggestionId, userId])
+}
