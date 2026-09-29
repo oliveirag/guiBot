@@ -174,3 +174,16 @@ The `fun` module. No setup.
   show after 20 seconds.
 - `/tictactoe [opponent]` with buttons. Leave opponent empty to play guiBot, which doesn't lose. The game lives
   in the buttons, so it survives restarts.
+
+## Utilities
+
+The `utils` module. No setup.
+
+- `/remind set when about [dm]` pings you in the channel (or DMs you) later, like `when: 1h30m`. If the channel is
+  gone it DMs you instead. `/remind list` and `/remind delete id`. Up to 25 going at once, a year out max.
+- `/poll question answers [hours] [multi]` posts a native Discord poll. Split answers with `|` (or commas).
+  Default 24 hours, max 768. guiBot needs Send Polls.
+- `/giveaway start prize duration [winners] [channel]` posts a giveaway people enter with a 🎉 button (click again
+  to back out). It ends on its own and pings the winners; people who left the server can't win.
+  `/giveaway end number` ends it early, `/giveaway reroll number [count]` draws someone who hasn't won yet, and
+  `/giveaway list` shows what's running. Needs Manage Server.

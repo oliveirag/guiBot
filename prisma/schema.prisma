@@ -392,3 +392,46 @@ model SuggestionVote {
 
   @@id([suggestionId, userId])
 }
+
+// A /remind. The row is deleted once it's delivered (or cancelled); its job then finds nothing and skips.
+model Reminder {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  channelId String
+  userId    String
+  text      String
+  // DM instead of posting in the channel.
+  dm        Boolean  @default(false)
+  dueAt     DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, dueAt])
+}
+
+model Giveaway {
+  id          Int             @id @default(autoincrement())
+  guildId     String
+  // Numbered per guild.
+  number      Int
+  channelId   String
+  messageId   String?
+  hostId      String
+  prize       String
+  winnerCount Int
+  endsAt      DateTime
+  ended       Boolean         @default(false)
+  // Comma-separated user ids, latest draw.
+  winnerIds   String          @default("")
+  createdAt   DateTime        @default(now())
+  entries     GiveawayEntry[]
+
+  @@unique([guildId, number])
+}
+
+model GiveawayEntry {
+  giveawayId Int
+  giveaway   Giveaway @relation(fields: [giveawayId], references: [id], onDelete: Cascade)
+  userId     String
+
+  @@id([giveawayId, userId])
+}
