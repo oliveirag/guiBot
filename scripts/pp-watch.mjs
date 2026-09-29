@@ -1,8 +1,10 @@
 // PrizePicks watcher. Runs on Gui's Mac with a real Chrome window (PrizePicks blocks headless and
 // server traffic), polls every profile guiBot tracks, and sends their open slips to guiBot.
-// Usage: npm run pp:watch   Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS
+// Usage: npm run pp:watch [-- --url http://localhost:3000] [--rounds N]
+// Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { apiGet, connectPage, launchChrome } from './pp/chrome.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -10,8 +12,11 @@ try {
   process.loadEnvFile(join(root, '.env'));
 } catch {}
 
+const { values: args } = parseArgs({ options: { url: { type: 'string' }, rounds: { type: 'string' } } });
 const TOKEN = process.env.PP_WATCHER_TOKEN?.trim();
-const GUIBOT = (process.env.GUIBOT_URL?.trim() || 'https://guibot-production.up.railway.app').replace(/\/+$/, '');
+const GUIBOT = (args.url || process.env.GUIBOT_URL?.trim() || 'https://guibot-production.up.railway.app').replace(/\/+$/, '');
+// For testing: stop after this many polling rounds.
+const ROUNDS = Number(args.rounds) || Infinity;
 const POLL_MS = Number(process.env.PP_POLL_MS) || 5000;
 const PORT = 9335;
 const PROFILES_EVERY_MS = 30_000;
@@ -53,7 +58,7 @@ async function run() {
     let lastProfilesAt = 0;
     let blocked = 0;
 
-    for (;;) {
+    for (let round = 0; round < ROUNDS; round++) {
       if (chrome.exitCode !== null) throw new Error('Chrome closed');
       if (Date.now() - lastProfilesAt > PROFILES_EVERY_MS) {
         const { profiles: ids } = await guibot('/pp/profiles');
@@ -100,9 +105,11 @@ async function run() {
 }
 
 process.on('SIGINT', () => process.exit(0));
+say(`Sending slips to ${GUIBOT}`);
 for (;;) {
   try {
     await run();
+    if (ROUNDS !== Infinity) break;
   } catch (error) {
     say(`Watcher error: ${error.message}. Restarting in 10s.`);
     await sleep(10_000);
