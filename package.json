@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "pp:watch": "node scripts/pp-watch.mjs",
+    "pp:probe": "node scripts/pp-probe.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

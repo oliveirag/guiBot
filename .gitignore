@@ -6,3 +6,6 @@ debug_*.html
 seen_entries.json
 prisma/*.db
 prisma/*.db-journal
+
+# PrizePicks watcher: Chrome profile and probe output
+scripts/.pp-*

@@ -5,6 +5,8 @@ import { clearLogCache } from '../src/modules/logs/lib/routes.js';
 
 export async function resetDb(): Promise<void> {
   await prisma.job.deleteMany();
+  await prisma.ppSeen.deleteMany();
+  await prisma.ppTrack.deleteMany();
   await prisma.reminder.deleteMany();
   await prisma.giveawayEntry.deleteMany();
   await prisma.giveaway.deleteMany();

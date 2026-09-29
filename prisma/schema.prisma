@@ -435,3 +435,31 @@ model GiveawayEntry {
 
   @@id([giveawayId, userId])
 }
+
+// A PrizePicks profile a guild follows. The watcher (scripts/pp-watch.mjs, on Gui's Mac) polls it.
+model PpTrack {
+  id         Int      @id @default(autoincrement())
+  guildId    String
+  // The short id in app.prizepicks.com/p/<profileId>.
+  profileId  String
+  channelId  String
+  username   String?
+  avatarUrl  String?
+  // False until the first poll after tracking, which records open slips without posting them.
+  baselined  Boolean  @default(false)
+  addedById  String
+  createdAt  DateTime @default(now())
+
+  @@unique([guildId, profileId])
+  @@index([profileId])
+}
+
+// Slips already handled per guild, so each posts once.
+model PpSeen {
+  guildId   String
+  profileId String
+  wagerId   String
+  createdAt DateTime @default(now())
+
+  @@id([guildId, profileId, wagerId])
+}

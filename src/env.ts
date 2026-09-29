@@ -15,6 +15,7 @@ const schema = z.object({
   JIRA_API_TOKEN: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().optional(),
+  PP_WATCHER_TOKEN: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 
@@ -33,6 +34,8 @@ export interface Env {
   jira?: { baseUrl: string; email: string; token: string };
   /** Gemini access for the AI module. Unset means AI replies are off. */
   gemini?: GeminiAccess;
+  /** Shared secret the PrizePicks watcher sends. Unset means the watcher routes answer 503. */
+  ppWatcherToken?: string;
 }
 
 export interface GeminiAccess {
@@ -95,5 +98,6 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
     jiraWebhookSecret: e.JIRA_WEBHOOK_SECRET || undefined,
     jira: jiraAccess(e.JIRA_BASE_URL, e.JIRA_EMAIL, e.JIRA_API_TOKEN),
     gemini: parseGemini({ GEMINI_API_KEY: e.GEMINI_API_KEY, GEMINI_MODEL: e.GEMINI_MODEL }),
+    ppWatcherToken: clean(e.PP_WATCHER_TOKEN) || undefined,
   };
 }

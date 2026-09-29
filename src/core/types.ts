@@ -70,6 +70,8 @@ export interface ConfigSection {
 export interface HttpDeps {
   env: Env;
   log: Logger;
+  /** For routes that post to Discord right away instead of queueing a job. */
+  client?: Client;
 }
 
 /** A module's HTTP routes. Lives in `src/modules/<name>/routes/`, one Fastify scope per file. */

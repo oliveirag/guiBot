@@ -160,8 +160,6 @@ there with 👍/👎 buttons (one vote each, click again to take it back) and a 
 `/suggestion approve|deny|consider number [reason]` updates the post and tells the author. Approving or denying
 closes voting. Anonymous suggestions hide the author's name; their verdict comes by DM only.
 
-The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
-
 ## Fun
 
 The `fun` module. No setup.
@@ -187,3 +185,16 @@ The `utils` module. No setup.
   to back out). It ends on its own and pings the winners; people who left the server can't win.
   `/giveaway end number` ends it early, `/giveaway reroll number [count]` draws someone who hasn't won yet, and
   `/giveaway list` shows what's running. Needs Manage Server.
+
+## PrizePicks
+
+The `pp` module posts a card in Discord a few seconds after a tracked profile places a new slip.
+
+- `/pp track profile [channel]` takes a share link (`app.prizepicks.com/p/<id>`) or the id. Slips already open when
+  you track someone aren't posted. `/pp untrack profile`, `/pp list` (also says whether the watcher is running).
+  Needs Manage Server. Profiles have to be public.
+- PrizePicks blocks servers and headless browsers, so the polling runs on a Mac with Google Chrome: `npm run pp:watch`.
+  It opens its own Chrome window (keep it open, and solve a captcha there if PrizePicks asks), checks every tracked
+  profile every 5 seconds (`PP_POLL_MS`), and sends open slips to guiBot, which posts only the new ones.
+- `PP_WATCHER_TOKEN` must match in the Mac's `.env` and on Railway. `GUIBOT_URL` defaults to the Railway host.
+- `npm run pp:probe [id...]` saves raw lineup JSON to `scripts/.pp-out/` for debugging the parser.

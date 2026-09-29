@@ -1,0 +1,618 @@
+{
+ "data": [
+  {
+   "type": "new_wager",
+   "id": "1793067262",
+   "attributes": {
+    "amount_bet_cents": 1000,
+    "amount_to_win_cents": 6000,
+    "amount_won_cents": 0,
+    "cashed_out_at": null,
+    "cashout_amount_won_cents": 0,
+    "code": null,
+    "community_play_id": null,
+    "contest_amount_won_cents": 0,
+    "contest_result": "pending",
+    "correlated_entry": false,
+    "created_at": "2026-09-29T02:52:37.606-04:00",
+    "eligible_for_refund": false,
+    "f2p": false,
+    "full_payout_multipliers": [
+     [
+      6
+     ]
+    ],
+    "game_mode": "prizepools",
+    "is_cashout_eligible": false,
+    "is_gift": false,
+    "parlay_count": 3,
+    "payout_data": {
+     "srp": null,
+     "original_payout_multipliers": null
+    },
+    "payout_multipliers": null,
+    "payouts": {
+     "3": {
+      "amount": 6000,
+      "multiplier": 6
+     }
+    },
+    "pick_protection": false,
+    "player_pack_id": null,
+    "promo_tag": false,
+    "promotion_id": null,
+    "refund_allowed_until": null,
+    "refund_window_expires_at": "2026-09-29T04:52:37.606-04:00",
+    "result": "pending",
+    "reverted_payouts": null,
+    "ruleset_id": 0,
+    "sport": "WNBA1H",
+    "updated_at": "2026-09-29T02:52:37.667-04:00",
+    "user_id": 1,
+    "uuid": null
+   },
+   "relationships": {
+    "predictions": {
+     "data": [
+      {
+       "type": "prediction",
+       "id": "7831862091"
+      },
+      {
+       "type": "prediction",
+       "id": "7831862092"
+      },
+      {
+       "type": "prediction",
+       "id": "7831862093"
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "included": [
+  {
+   "type": "duration",
+   "id": "714",
+   "attributes": {
+    "name": "1st Half"
+   }
+  },
+  {
+   "type": "new_player",
+   "id": "317265",
+   "attributes": {
+    "combo": false,
+    "display_name": "Natasha Howard",
+    "image_url": "https://static.prizepicks.com/images/manual/NatashaHoward.png",
+    "jersey_number": "1",
+    "league": "WNBA1H",
+    "league_id": 193,
+    "market": "Minnesota",
+    "name": "Natasha Howard",
+    "position": "F",
+    "ppid": "WNBA_player_RPQW6MXCzbZQjP8LfYoF91Vp",
+    "team": "MIN",
+    "team_name": "Lynx"
+   },
+   "relationships": {
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "team_data": {
+     "data": {
+      "type": "team",
+      "id": "2505"
+     }
+    }
+   }
+  },
+  {
+   "type": "prediction",
+   "id": "7831862092",
+   "attributes": {
+    "adjusted_odds": false,
+    "effective_result": "pending",
+    "initial_score": 0,
+    "is_promo": false,
+    "line_score": 27,
+    "odds_type": "standard",
+    "original_line_score": null,
+    "override_result": null,
+    "result": "pending",
+    "wager_type": "over"
+   },
+   "relationships": {
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "65162"
+     }
+    },
+    "projection": {
+     "data": {
+      "type": "projection",
+      "id": "15306380"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13852762"
+     }
+    },
+    "score_snapshot": {
+     "data": null
+    }
+   }
+  },
+  {
+   "type": "projection",
+   "id": "15296696",
+   "attributes": {
+    "adjusted_odds": null,
+    "allowed_wager_types": "under_or_over",
+    "board_time": "2026-09-17T08:33:00.000-04:00",
+    "custom_image": null,
+    "description": "NYL 1st Half",
+    "end_time": null,
+    "event_type": "team_with_duration",
+    "flash_sale_line_score": null,
+    "game_id": "WNBA_game_fc5GwwX24WmbkLaDpeQuIjt7",
+    "group_key": "317265-19-WNBA_game_fc5GwwX24WmbkLaDpeQuIjt7-714-false",
+    "hr_20": true,
+    "in_game": false,
+    "is_live": false,
+    "is_live_scored": true,
+    "is_promo": false,
+    "league_ppid": "WNBA",
+    "line_score": 5.5,
+    "odds_type": "standard",
+    "projection_type": "Single Stat",
+    "rank": 1000,
+    "refundable": true,
+    "start_time": "2026-09-29T20:30:00.000-04:00",
+    "stat_display_name": "Points",
+    "stat_type": "Points",
+    "status": "pre_game",
+    "today": true,
+    "tv_channel": null,
+    "updated_at": "2026-09-28T09:00:50.568-04:00"
+   },
+   "relationships": {
+    "duration": {
+     "data": {
+      "type": "duration",
+      "id": "714"
+     }
+    },
+    "game": {
+     "data": {
+      "type": "game",
+      "id": "189911"
+     }
+    },
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "317265"
+     }
+    },
+    "projection_type": {
+     "data": {
+      "type": "projection_type",
+      "id": "2"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13843077"
+     }
+    },
+    "stat_type": {
+     "data": {
+      "type": "stat_type",
+      "id": "19"
+     }
+    }
+   }
+  },
+  {
+   "type": "stat_type",
+   "id": "14",
+   "attributes": {
+    "lfg_ignored_leagues": [],
+    "name": "Fantasy Score",
+    "rank": 4
+   }
+  },
+  {
+   "type": "new_player",
+   "id": "65162",
+   "attributes": {
+    "combo": false,
+    "display_name": "A'ja Wilson",
+    "image_url": "https://static.prizepicks.com/images/players/WNBA/A'ja_Wilson_WNBA_player_e1fzWnin9JBoRKYaugxyyP08.webp",
+    "jersey_number": "22",
+    "league": "WNBA1H",
+    "league_id": 193,
+    "market": "Las Vegas",
+    "name": "A'ja Wilson",
+    "position": "C",
+    "ppid": "WNBA_player_e1fzWnin9JBoRKYaugxyyP08",
+    "team": "LVA",
+    "team_name": "Aces"
+   },
+   "relationships": {
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "team_data": {
+     "data": {
+      "type": "team",
+      "id": "2501"
+     }
+    }
+   }
+  },
+  {
+   "type": "prediction",
+   "id": "7831862091",
+   "attributes": {
+    "adjusted_odds": null,
+    "effective_result": "pending",
+    "initial_score": 0,
+    "is_promo": false,
+    "line_score": 5.5,
+    "odds_type": "standard",
+    "original_line_score": null,
+    "override_result": null,
+    "result": "pending",
+    "wager_type": "over"
+   },
+   "relationships": {
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "317265"
+     }
+    },
+    "projection": {
+     "data": {
+      "type": "projection",
+      "id": "15296696"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13843077"
+     }
+    },
+    "score_snapshot": {
+     "data": null
+    }
+   }
+  },
+  {
+   "type": "prediction",
+   "id": "7831862093",
+   "attributes": {
+    "adjusted_odds": null,
+    "effective_result": "pending",
+    "initial_score": 0,
+    "is_promo": false,
+    "line_score": 14.5,
+    "odds_type": "standard",
+    "original_line_score": null,
+    "override_result": null,
+    "result": "pending",
+    "wager_type": "over"
+   },
+   "relationships": {
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "238106"
+     }
+    },
+    "projection": {
+     "data": {
+      "type": "projection",
+      "id": "15300581"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13846963"
+     }
+    },
+    "score_snapshot": {
+     "data": null
+    }
+   }
+  },
+  {
+   "type": "projection",
+   "id": "15306380",
+   "attributes": {
+    "adjusted_odds": false,
+    "allowed_wager_types": "over",
+    "board_time": "2026-09-17T08:33:00.000-04:00",
+    "custom_image": null,
+    "description": "IND 1st Half",
+    "end_time": null,
+    "event_type": "team_with_duration",
+    "flash_sale_line_score": null,
+    "game_id": "WNBA_game_lOhbTj9qYxz3KnppKdkL0HNH",
+    "group_key": "65162-14-WNBA_game_lOhbTj9qYxz3KnppKdkL0HNH-714-false",
+    "hr_20": true,
+    "in_game": false,
+    "is_live": false,
+    "is_live_scored": true,
+    "is_promo": false,
+    "league_ppid": "WNBA",
+    "line_score": 27,
+    "odds_type": "standard",
+    "projection_type": "Fantasy Score",
+    "rank": 1000,
+    "refundable": true,
+    "start_time": "2026-09-29T18:30:00.000-04:00",
+    "stat_display_name": "Fantasy Score",
+    "stat_type": "Fantasy Score",
+    "status": "pre_game",
+    "today": true,
+    "tv_channel": null,
+    "updated_at": "2026-09-28T16:48:42.633-04:00"
+   },
+   "relationships": {
+    "duration": {
+     "data": {
+      "type": "duration",
+      "id": "714"
+     }
+    },
+    "game": {
+     "data": {
+      "type": "game",
+      "id": "189910"
+     }
+    },
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "65162"
+     }
+    },
+    "projection_type": {
+     "data": {
+      "type": "projection_type",
+      "id": "1"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13852762"
+     }
+    },
+    "stat_type": {
+     "data": {
+      "type": "stat_type",
+      "id": "14"
+     }
+    }
+   }
+  },
+  {
+   "type": "projection",
+   "id": "15300581",
+   "attributes": {
+    "adjusted_odds": null,
+    "allowed_wager_types": "under_or_over",
+    "board_time": "2026-09-17T08:33:00.000-04:00",
+    "custom_image": null,
+    "description": "GSV 1st Half",
+    "end_time": null,
+    "event_type": "team_with_duration",
+    "flash_sale_line_score": null,
+    "game_id": "WNBA_game_BQUO5VmF9ByMarNdvJAOwW1Y",
+    "group_key": "238106-106-WNBA_game_BQUO5VmF9ByMarNdvJAOwW1Y-714-false",
+    "in_game": false,
+    "is_live": false,
+    "is_live_scored": true,
+    "is_promo": false,
+    "league_ppid": "WNBA",
+    "line_score": 14.5,
+    "odds_type": "standard",
+    "projection_type": "Single Stat",
+    "rank": 1000,
+    "refundable": true,
+    "start_time": "2026-09-30T21:00:00.000-04:00",
+    "stat_display_name": "PRA",
+    "stat_type": "Pts+Rebs+Asts",
+    "status": "pre_game",
+    "tv_channel": null,
+    "updated_at": "2026-09-28T12:04:17.300-04:00"
+   },
+   "relationships": {
+    "duration": {
+     "data": {
+      "type": "duration",
+      "id": "714"
+     }
+    },
+    "game": {
+     "data": {
+      "type": "game",
+      "id": "189913"
+     }
+    },
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "new_player": {
+     "data": {
+      "type": "new_player",
+      "id": "238106"
+     }
+    },
+    "projection_type": {
+     "data": {
+      "type": "projection_type",
+      "id": "2"
+     }
+    },
+    "score": {
+     "data": {
+      "type": "score",
+      "id": "13846963"
+     }
+    },
+    "stat_type": {
+     "data": {
+      "type": "stat_type",
+      "id": "106"
+     }
+    }
+   }
+  },
+  {
+   "type": "league",
+   "id": "193",
+   "attributes": {
+    "active": true,
+    "f2p_enabled": true,
+    "fantasy_score_weights": {
+     "default": [
+      {
+       "id": "Points",
+       "weight": 1
+      },
+      {
+       "id": "Assists",
+       "weight": 1.5
+      },
+      {
+       "id": "BlockedShots",
+       "weight": 3
+      },
+      {
+       "id": "Rebounds",
+       "weight": 1.2
+      },
+      {
+       "id": "Steals",
+       "weight": 3
+      },
+      {
+       "id": "Turnovers",
+       "weight": -1
+      }
+     ]
+    },
+    "full_logo": null,
+    "has_live_projections": false,
+    "icon": "basketball",
+    "image_url": "https://static.prizepicks.com/images/leagues/production/24.svg",
+    "last_five_games_enabled": true,
+    "league_icon_id": 24,
+    "logo": "https://static.prizepicks.com/production/dtbinzjb7t1cjhw825tsh0or2dwx-6613__wnba-alternate-2020%201%20%282%29.png",
+    "name": "WNBA1H",
+    "parent_id": 3,
+    "parent_name": "WNBA",
+    "player_headshot_fallback": null,
+    "ppid": "WNBA",
+    "projections_count": 0,
+    "rank": 108,
+    "show_trending": true
+   },
+   "relationships": {
+    "projection_filters": {
+     "data": []
+    }
+   }
+  },
+  {
+   "type": "stat_type",
+   "id": "19",
+   "attributes": {
+    "lfg_ignored_leagues": [
+     305
+    ],
+    "name": "Points",
+    "rank": 1
+   }
+  },
+  {
+   "type": "stat_type",
+   "id": "106",
+   "attributes": {
+    "lfg_ignored_leagues": [],
+    "name": "Pts+Rebs+Asts",
+    "rank": 1
+   }
+  },
+  {
+   "type": "new_player",
+   "id": "238106",
+   "attributes": {
+    "combo": false,
+    "display_name": "Paige Bueckers",
+    "image_url": "https://static.prizepicks.com/images/players/WNBA/Paige_Bueckers_WNBA_player_9Y8nnqPB9PRhUk1Zb4Mlsb5c.webp",
+    "jersey_number": "5",
+    "league": "WNBA1H",
+    "league_id": 193,
+    "market": "Dallas",
+    "name": "Paige Bueckers",
+    "position": "G",
+    "ppid": "WNBA_player_9Y8nnqPB9PRhUk1Zb4Mlsb5c",
+    "team": "DAL",
+    "team_name": "Wings"
+   },
+   "relationships": {
+    "league": {
+     "data": {
+      "type": "league",
+      "id": "193"
+     }
+    },
+    "team_data": {
+     "data": {
+      "type": "team",
+      "id": "2502"
+     }
+    }
+   }
+  }
+ ],
+ "meta": {
+  "current_page": 1,
+  "potential_winnings_cents": 375000,
+  "total_pages": 1
+ }
+}
