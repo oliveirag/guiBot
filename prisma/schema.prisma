@@ -255,6 +255,14 @@ model LogRoute {
   @@id([guildId, kind])
 }
 
+// Channels (or whole categories) whose messages and voice activity don't get logged.
+model LogIgnore {
+  guildId   String
+  channelId String
+
+  @@id([guildId, channelId])
+}
+
 // One automod rule's settings. Rules: spam, duplicates, invites, links, words, mentions, caps, newaccount.
 model AutomodRule {
   guildId  String
@@ -360,6 +368,8 @@ model Suggestion {
   // Numbered per guild.
   number     Int
   authorId   String
+  // Hides the author on the post. authorId is still kept so the verdict can be DMed.
+  anonymous  Boolean          @default(false)
   content    String
   // open | approved | denied | considered
   status     String           @default("open")

@@ -1,4 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import type { Client } from 'discord.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { authorOf } from '../../../src/modules/suggestions/lib/publish.js';
 import {
   createSuggestion,
   getSuggestion,
@@ -13,7 +15,7 @@ const G = 'g1';
 const make = (guildId = G) => createSuggestion({ guildId, authorId: 'a', content: 'Add a memes channel', channelId: 'c' });
 
 type Row = { toJSON(): { components: { custom_id: string; disabled?: boolean }[] } };
-type Embed = { toJSON(): { title?: string; color?: number; fields?: { name: string; value: string }[]; footer?: { text: string } } };
+type Embed = { toJSON(): { author?: { name: string; icon_url?: string }; title?: string; color?: number; fields?: { name: string; value: string }[]; footer?: { text: string } } };
 
 beforeEach(resetDb);
 
@@ -55,5 +57,18 @@ describe('suggestions', () => {
     const approved = renderSuggestion(await review(s, 'approved', 'mod', 'Good call'), { up: 0, down: 0 }, { name: 'Ana' });
     expect((approved.embeds![0] as Embed).toJSON().fields?.at(-1)).toEqual({ name: 'Approved by', value: '<@mod>: Good call' });
     expect((approved.components![0] as Row).toJSON().components.every((b) => b.disabled)).toBe(true);
+  });
+
+  it('hides the author on anonymous suggestions', async () => {
+    const s = await createSuggestion({ guildId: G, authorId: 'a', content: 'Rename general', channelId: 'c', anonymous: true });
+    expect(s.anonymous).toBe(true);
+    const view = renderSuggestion(s, { up: 0, down: 0 }, { name: 'Ana', avatarUrl: 'https://x/ana.png' });
+    expect((view.embeds![0] as Embed).toJSON().author).toEqual({ name: 'Anonymous' });
+
+    const fetch = vi.fn(async () => ({ displayName: 'Ana', displayAvatarURL: () => 'https://x/ana.png' }));
+    const client = { users: { fetch } } as unknown as Client;
+    expect(await authorOf(client, s)).toEqual({ name: 'Anonymous' });
+    expect(fetch).not.toHaveBeenCalled();
+    expect(await authorOf(client, await make())).toEqual({ name: 'Ana', avatarUrl: 'https://x/ana.png' });
   });
 });

@@ -19,7 +19,7 @@ export default event({
       if (!s) throw new UserError("That suggestion doesn't exist anymore.");
       if (s.status === 'approved' || s.status === 'denied') throw new UserError('Voting on this one is closed.');
       const result = await vote(s.id, interaction.user.id, direction === 'up' ? 1 : -1);
-      await interaction.update(renderSuggestion(s, await tally(s.id), await authorOf(interaction.client, s.authorId)));
+      await interaction.update(renderSuggestion(s, await tally(s.id), await authorOf(interaction.client, s)));
       await interaction.followUp({ embeds: [ok(RESULT[result])], flags: MessageFlags.Ephemeral });
     } catch (error) {
       await reportError(interaction, error, log);

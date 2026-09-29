@@ -1,10 +1,10 @@
-import type { Guild, GuildMember, User } from 'discord.js';
+import type { Client, Guild, GuildMember, User } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setModuleEnabled } from '../../../src/core/guildConfig.js';
 import { prisma } from '../../../src/db.js';
 import { UserError } from '../../../src/core/errors.js';
 import { messageDeleted, roleDiff, voiceMoved } from '../../../src/modules/logs/lib/render.js';
-import { getRoutes, postLog, setRoute } from '../../../src/modules/logs/lib/routes.js';
+import { channelChain, getIgnored, getRoutes, isIgnored, postLog, setRoute, toggleIgnored } from '../../../src/modules/logs/lib/routes.js';
 import { JOB_UNBAN, punish, revoke } from '../../../src/modules/mod/lib/act.js';
 import {
   activeWarns,
@@ -176,6 +176,46 @@ describe('log routes', () => {
 
     await setRoute(G, 'modlog', null);
     expect((await getRoutes(G)).has('modlog')).toBe(false);
+  });
+});
+
+describe('log ignores', () => {
+  // category > channel > thread, plus a loose channel with no category.
+  const client = {
+    channels: {
+      cache: new Map<string, { parentId: string | null }>([
+        ['cat', { parentId: null }],
+        ['chan', { parentId: 'cat' }],
+        ['thread', { parentId: 'chan' }],
+        ['loose', { parentId: null }],
+      ]),
+    },
+  } as unknown as Client;
+
+  it('walks up from a thread to its category', () => {
+    expect(channelChain(client, 'thread')).toEqual(['thread', 'chan', 'cat']);
+    expect(channelChain(client, 'loose')).toEqual(['loose']);
+    expect(channelChain(client, 'uncached')).toEqual(['uncached']);
+  });
+
+  it('toggles channels on and off the list', async () => {
+    expect(await toggleIgnored(G, 'chan')).toBe(true);
+    expect([...(await getIgnored(G))]).toEqual(['chan']);
+    expect(await toggleIgnored(G, 'chan')).toBe(false);
+    expect((await getIgnored(G)).size).toBe(0);
+  });
+
+  it('ignores a channel, its threads, and everything under an ignored category', async () => {
+    await toggleIgnored(G, 'chan');
+    expect(await isIgnored(client, G, 'chan')).toBe(true);
+    expect(await isIgnored(client, G, 'thread')).toBe(true);
+    expect(await isIgnored(client, G, 'loose')).toBe(false);
+    expect(await isIgnored(client, 'other', 'chan')).toBe(false);
+
+    await toggleIgnored(G, 'chan');
+    await toggleIgnored(G, 'cat');
+    expect(await isIgnored(client, G, 'thread')).toBe(true);
+    expect(await isIgnored(client, G, 'loose')).toBe(false);
   });
 });
 

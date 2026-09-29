@@ -21,7 +21,15 @@ export interface Author {
   avatarUrl?: string;
 }
 
-export function createSuggestion(input: { guildId: string; authorId: string; content: string; channelId: string }): Promise<Suggestion> {
+export const ANONYMOUS: Author = { name: 'Anonymous' };
+
+export function createSuggestion(input: {
+  guildId: string;
+  authorId: string;
+  content: string;
+  channelId: string;
+  anonymous?: boolean;
+}): Promise<Suggestion> {
   return prisma.$transaction(async (tx) => {
     const last = await tx.suggestion.findFirst({ where: { guildId: input.guildId }, orderBy: { number: 'desc' } });
     return tx.suggestion.create({ data: { ...input, number: (last?.number ?? 0) + 1 } });
@@ -61,7 +69,7 @@ export async function review(s: Suggestion, verdict: Verdict, reviewerId: string
 export function renderSuggestion(s: Suggestion, votes: Tally, author: Author): Pick<MessageCreateOptions, 'embeds' | 'components'> {
   const embed = new EmbedBuilder()
     .setColor(COLOR[s.status] ?? BRAND_COLOR)
-    .setAuthor({ name: author.name, iconURL: author.avatarUrl })
+    .setAuthor(s.anonymous ? { name: ANONYMOUS.name } : { name: author.name, iconURL: author.avatarUrl })
     .setDescription(s.content)
     .addFields(
       { name: 'Status', value: LABEL[s.status] ?? s.status, inline: true },

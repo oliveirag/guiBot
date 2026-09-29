@@ -3,7 +3,7 @@ import { configSection } from '../../core/define.js';
 import { info, ok } from '../../core/embeds.js';
 import { UserError } from '../../core/errors.js';
 import { canPost } from '../dev/lib/feeds.js';
-import { LOG_KINDS, LOG_LABELS, getRoutes, setRoute, type LogKind } from './lib/routes.js';
+import { LOG_KINDS, LOG_LABELS, getIgnored, getRoutes, setRoute, toggleIgnored, type LogKind } from './lib/routes.js';
 
 const KIND_CHOICES = [
   ...LOG_KINDS.map((k) => ({ name: `${k}: ${LOG_LABELS[k]}`, value: k })),
@@ -11,6 +11,15 @@ const KIND_CHOICES = [
 ];
 
 const kindsFrom = (raw: string): LogKind[] => (raw === 'all' ? [...LOG_KINDS] : [raw as LogKind]);
+
+const IGNORABLE = [
+  ChannelType.GuildText,
+  ChannelType.GuildAnnouncement,
+  ChannelType.GuildVoice,
+  ChannelType.GuildStageVoice,
+  ChannelType.GuildForum,
+  ChannelType.GuildCategory,
+] as const;
 
 export default configSection({
   build: (g) =>
@@ -34,6 +43,14 @@ export default configSection({
           .setDescription('Stop logging a kind.')
           .addStringOption((o) => o.setName('kind').setDescription('What to stop').setRequired(true).addChoices(...KIND_CHOICES)),
       )
+      .addSubcommand((s) =>
+        s
+          .setName('ignore')
+          .setDescription("Stop (or restart) logging messages and voice in a channel or category.")
+          .addChannelOption((o) =>
+            o.setName('channel').setDescription('Channel or category to toggle').setRequired(true).addChannelTypes(...IGNORABLE),
+          ),
+      )
       .addSubcommand((s) => s.setName('show').setDescription('Show where each log goes.')),
 
   async run({ interaction }) {
@@ -44,7 +61,18 @@ export default configSection({
     if (sub === 'show') {
       const routes = await getRoutes(guildId);
       const lines = LOG_KINDS.map((k) => `**${k}** ${routes.has(k) ? `<#${routes.get(k)}>` : 'off'} · ${LOG_LABELS[k]}`);
+      const ignored = [...(await getIgnored(guildId))];
+      lines.push('', `**Ignored** ${ignored.length > 0 ? ignored.map((id) => `<#${id}>`).join(' ') : 'none'}`);
       await interaction.reply({ embeds: [info(lines.join('\n'), 'Logs')], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    if (sub === 'ignore') {
+      const channel = interaction.options.getChannel('channel', true, [...IGNORABLE]);
+      const now = await toggleIgnored(guildId, channel.id);
+      const what = channel.type === ChannelType.GuildCategory ? `${channel} and everything in it` : `${channel}`;
+      const text = now ? `Not logging messages or voice in ${what} anymore.` : `Logging ${what} again.`;
+      await interaction.reply({ embeds: [ok(text)], flags: MessageFlags.Ephemeral });
       return;
     }
 

@@ -40,8 +40,47 @@ export async function setRoute(guildId: string, kind: LogKind, channelId: string
   cache.delete(guildId);
 }
 
+const ignoreCache = new Map<string, Set<string>>();
+
+export async function getIgnored(guildId: string): Promise<ReadonlySet<string>> {
+  const hit = ignoreCache.get(guildId);
+  if (hit) return hit;
+  const rows = await prisma.logIgnore.findMany({ where: { guildId } });
+  const ids = new Set(rows.map((r) => r.channelId));
+  ignoreCache.set(guildId, ids);
+  return ids;
+}
+
+/** Flips a channel in or out of the ignore list. True when it's now ignored. */
+export async function toggleIgnored(guildId: string, channelId: string): Promise<boolean> {
+  const key = { guildId_channelId: { guildId, channelId } };
+  const existing = await prisma.logIgnore.findUnique({ where: key });
+  if (existing) await prisma.logIgnore.delete({ where: key });
+  else await prisma.logIgnore.create({ data: { guildId, channelId } });
+  ignoreCache.delete(guildId);
+  return !existing;
+}
+
+/** The channel, its parent (category, or channel for a thread), and the parent's parent (a thread's category). */
+export function channelChain(client: Client, channelId: string): string[] {
+  const chain = [channelId];
+  let current = client.channels.cache.get(channelId);
+  for (let i = 0; i < 2 && current && 'parentId' in current && current.parentId; i++) {
+    chain.push(current.parentId);
+    current = client.channels.cache.get(current.parentId);
+  }
+  return chain;
+}
+
+/** True when the channel, or a category or channel it sits under, is on the ignore list. */
+export async function isIgnored(client: Client, guildId: string, channelId: string): Promise<boolean> {
+  const ignored = await getIgnored(guildId);
+  return ignored.size > 0 && channelChain(client, channelId).some((id) => ignored.has(id));
+}
+
 export function clearLogCache(): void {
   cache.clear();
+  ignoreCache.clear();
 }
 
 /** Posts to the guild's channel for `kind`. Null when there's no route, logs are off, or the channel is gone. */

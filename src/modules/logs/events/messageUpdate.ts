@@ -1,7 +1,7 @@
 import { Events, type Message, type PartialMessage } from 'discord.js';
 import { event } from '../../../core/define.js';
 import { asLogUser, messageEdited } from '../lib/render.js';
-import { postLog } from '../lib/routes.js';
+import { isIgnored, postLog } from '../lib/routes.js';
 
 export default event({
   name: Events.MessageUpdate,
@@ -10,6 +10,7 @@ export default event({
     const old = before.partial ? null : before.content;
     // Link previews and pins also fire updates; only real text edits count.
     if (old === after.content) return;
+    if (await isIgnored(after.client, after.guildId, after.channelId)) return;
     const embed = messageEdited(asLogUser(after.author), after.channelId, after.url, old, after.content);
     await postLog(after.client, after.guildId, 'messages', { embeds: [embed] });
   },

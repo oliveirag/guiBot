@@ -117,7 +117,8 @@ Bans made in Discord's own menu still get a case (the moderator shows up if guiB
 
 The `logs` module. Route each kind to a channel with `/config logs set kind channel` (or `all`):
 `messages` (edits, deletes, purges), `members` (joins, leaves), `roles` (role and nickname changes), `voice`,
-and `modlog` (cases). `/config logs off kind` stops one.
+and `modlog` (cases). `/config logs off kind` stops one. `/config logs ignore #channel` toggles a channel or
+category off the message and voice logs (threads inside it too).
 
 ## Automod
 
@@ -154,10 +155,10 @@ The `welcome` module. Set it up in `/config welcome`:
 
 ## Suggestions
 
-The `suggestions` module. `/config suggestions channel #channel [threads]` turns it on. `/suggest idea` posts
+The `suggestions` module. `/config suggestions channel #channel [threads]` turns it on. `/suggest idea [anonymous]` posts
 there with 👍/👎 buttons (one vote each, click again to take it back) and a discussion thread.
 `/suggestion approve|deny|consider number [reason]` updates the post and tells the author. Approving or denying
-closes voting.
+closes voting. Anonymous suggestions hide the author's name; their verdict comes by DM only.
 
 The old PrizePicks tracker lives in `legacy/prizepicks/` until it's ported as a module.
 

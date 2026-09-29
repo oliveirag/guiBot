@@ -36,8 +36,9 @@ export default command({
     const redrawn = await refresh(interaction.client, updated);
 
     // Let the author know in the discussion thread (it shares the message's id) or by DM.
+    // Anonymous authors only ever get a DM, since a ping in the thread would out them.
     const note = `Your suggestion #${s.number} was ${VERB[verdict]}${reason ? `: ${reason}` : '.'}`;
-    const thread = await interaction.client.channels.fetch(s.messageId ?? '').catch(() => null);
+    const thread = s.anonymous ? null : await interaction.client.channels.fetch(s.messageId ?? '').catch(() => null);
     if (thread?.isThread()) {
       await thread.send({ content: `<@${s.authorId}> ${note}`, allowedMentions: { users: [s.authorId] } }).catch(() => {});
     } else {

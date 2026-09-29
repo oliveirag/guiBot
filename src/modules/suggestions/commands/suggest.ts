@@ -12,7 +12,8 @@ export default command({
     .setName('suggest')
     .setDescription('Suggest something for the server. People vote on it.')
     .setContexts(InteractionContextType.Guild)
-    .addStringOption((o) => o.setName('idea').setDescription('Your suggestion').setRequired(true).setMinLength(5).setMaxLength(1500)),
+    .addStringOption((o) => o.setName('idea').setDescription('Your suggestion').setRequired(true).setMinLength(5).setMaxLength(1500))
+    .addBooleanOption((o) => o.setName('anonymous').setDescription('Hide your name on the post (default no)')),
   guildOnly: true,
   cooldownSeconds: 60,
 
@@ -23,11 +24,13 @@ export default command({
     if (!settings?.channelId) throw new UserError("Suggestions aren't set up here. An admin can turn them on with `/config suggestions channel`.");
 
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const anonymous = interaction.options.getBoolean('anonymous') ?? false;
     const s = await createSuggestion({
       guildId,
       authorId: interaction.user.id,
       content: interaction.options.getString('idea', true),
       channelId: settings.channelId,
+      anonymous,
     });
     const author = { name: interaction.member.displayName, avatarUrl: interaction.member.displayAvatarURL() };
     const message = await sendTo(interaction.client, settings.channelId, renderSuggestion(s, { up: 0, down: 0 }, author));
@@ -42,6 +45,7 @@ export default command({
         .startThread({ name: `Suggestion #${s.number}`.slice(0, 100), autoArchiveDuration: 10080 })
         .catch((error) => log.warn('suggestions: thread failed', error));
     }
-    await interaction.editReply({ embeds: [ok(`Posted suggestion #${s.number}: ${message.url}`)] });
+    const how = anonymous ? ' anonymously' : '';
+    await interaction.editReply({ embeds: [ok(`Posted suggestion #${s.number}${how}: ${message.url}`)] });
   },
 });
