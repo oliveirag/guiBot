@@ -89,7 +89,8 @@ async function claim(guildId: string, profileId: string, wagerId: string): Promi
 
 /**
  * Posts slips each tracking guild hasn't seen. A guild's first poll after /pp track only records
- * what's already open, so tracking someone doesn't dump their old slips into the channel.
+ * slips placed before the track, so tracking someone doesn't dump their old slips into the channel
+ * but a slip placed between /pp track and that first poll still posts.
  */
 export async function ingestSlips(client: Client, profileId: string, slips: Slip[], profile: ProfileInfo = {}): Promise<IngestResult> {
   const result: IngestResult = { posted: 0, baselined: 0 };
@@ -103,13 +104,12 @@ export async function ingestSlips(client: Client, profileId: string, slips: Slip
     if (info.username !== t.username || info.avatarUrl !== t.avatarUrl || !t.baselined) {
       await prisma.ppTrack.update({ where: { id: t.id }, data: { ...info, baselined: true } });
     }
-    if (!t.baselined) {
-      for (const s of slips) await claim(t.guildId, profileId, s.id);
-      result.baselined += slips.length;
-      continue;
-    }
     for (const s of slips) {
       if (!(await claim(t.guildId, profileId, s.id))) continue;
+      if (!t.baselined && s.createdAt < t.createdAt) {
+        result.baselined++;
+        continue;
+      }
       const sent = await sendTo(client, t.channelId, { embeds: [slipEmbed(s, { profileId, ...info })] });
       if (sent) result.posted++;
       else log.warn(`pp: couldn't post slip ${s.id} for ${profileId} in ${t.channelId}`);

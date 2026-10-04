@@ -143,6 +143,16 @@ describe('ingest', () => {
     expect(sent).toHaveLength(1);
   });
 
+  it('posts slips placed after tracking even on the first check', async () => {
+    const { track: t } = await track();
+    const { client, sent } = fakeDiscord();
+    const placedAfter = new Date(t.createdAt.getTime() + 60_000).toISOString();
+    const first = await ingestSlips(client, P, parseLineups(withExtraSlip('after-track', placedAfter)));
+    expect(first).toEqual({ posted: 1, baselined: 1 });
+    expect(sent).toHaveLength(1);
+    expect(embeds(sent[0]!.message)[0]?.footer?.text).toContain('after-track');
+  });
+
   it('posts to every guild tracking the profile, unless pp is off there', async () => {
     await track(G, 'c1');
     await track('g2', 'c2');

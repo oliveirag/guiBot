@@ -48,10 +48,21 @@ export async function connectPage(port) {
     for (const w of pending.values()) w.reject(new Error('Chrome closed'));
     pending.clear();
   });
-  const send = (method, params = {}) =>
+  // A closed socket swallows sends silently, so without these checks a closed tab leaves the
+  // watcher awaiting forever and Node exits with "unsettled top-level await" instead of restarting.
+  const send = (method, params = {}, timeoutMs = 60_000) =>
     new Promise((resolve, reject) => {
+      if (ws.readyState !== WebSocket.OPEN) return reject(new Error('Chrome closed'));
       const id = ++seq;
-      pending.set(id, { resolve, reject });
+      const timer = setTimeout(() => {
+        pending.delete(id);
+        reject(new Error(`Chrome didn't answer ${method} in ${timeoutMs / 1000}s`));
+      }, timeoutMs);
+      const done = (fn) => (value) => {
+        clearTimeout(timer);
+        fn(value);
+      };
+      pending.set(id, { resolve: done(resolve), reject: done(reject) });
       ws.send(JSON.stringify({ id, method, params }));
     });
 

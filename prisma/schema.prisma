@@ -445,7 +445,7 @@ model PpTrack {
   channelId  String
   username   String?
   avatarUrl  String?
-  // False until the first poll after tracking, which records open slips without posting them.
+  // False until the first poll after tracking, which records slips placed before the track without posting them.
   baselined  Boolean  @default(false)
   addedById  String
   createdAt  DateTime @default(now())
