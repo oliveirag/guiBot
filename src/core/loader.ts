@@ -51,8 +51,11 @@ async function findEntry(dir: string, base: string): Promise<string | null> {
   return null;
 }
 
-/** Loads every `root/<module>/index` plus its commands/, events/, jobs/, routes/ folders and optional config. */
-export async function loadModules(root: string, enabled: readonly string[] | null): Promise<LoadedModule[]> {
+/**
+ * Loads every `root/<module>/index` plus its commands/, events/, jobs/, routes/ folders and optional config.
+ * Names of modules left out by `enabled` are pushed onto `skipped` when given.
+ */
+export async function loadModules(root: string, enabled: readonly string[] | null, skipped?: string[]): Promise<LoadedModule[]> {
   const entries = (await readdir(root, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -63,7 +66,10 @@ export async function loadModules(root: string, enabled: readonly string[] | nul
     const index = await findEntry(dir, 'index');
     if (!index) continue;
     const meta = await importDefault<ModuleMeta>(index);
-    if (enabled && !meta.alwaysOn && !enabled.includes(meta.name)) continue;
+    if (enabled && !meta.alwaysOn && !enabled.includes(meta.name)) {
+      skipped?.push(meta.name);
+      continue;
+    }
     const configFile = await findEntry(dir, 'config');
     modules.push({
       meta,
