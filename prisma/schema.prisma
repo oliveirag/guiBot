@@ -436,7 +436,7 @@ model GiveawayEntry {
   @@id([giveawayId, userId])
 }
 
-// A PrizePicks profile a guild follows. The watcher (scripts/pp-watch.mjs, on Gui's Mac) polls it.
+// A PrizePicks profile a guild follows. The watcher (npm run pp:watch, on Gui's Mac) polls it.
 model PpTrack {
   id         Int      @id @default(autoincrement())
   guildId    String
