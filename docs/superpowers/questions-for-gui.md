@@ -38,3 +38,9 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 ## Suggestions
 - Votes are buttons, not reactions, so each person gets one vote and counts can't be faked. `/suggest` has a 60s cooldown.
 - Anonymous suggestions via `/suggest anonymous:true` (Gui, 2026-09-29). Author id is still stored so the verdict can be DMed; mods can't see it through the bot. No separate reviewed channel.
+
+## PrizePicks watcher
+- The 10/2 exit code 13 came from a DevTools call sent after the Chrome tab's socket had closed: it waited forever, nothing kept Node alive, so Node quit with "unsettled top-level await". Reproduced against a fake Chrome (2026-10-22). Your 10/4 fix already closed that path.
+- Added on top (2026-10-22): a 5 min no-progress watchdog that closes Chrome and restarts the run, fatal errors and exit codes logged, and `npm run pp:watch` is now a supervisor that restarts the watcher process (10s, doubling to 5 min while it keeps crashing). Run `node scripts/pp/run.mjs` to skip the supervisor.
+- A missing `PP_WATCHER_TOKEN` exits with code 2 and is not restarted.
+- On start, a Chrome left on port 9335 by a dead watcher is closed first. Otherwise the new Chrome handed off to it and the watcher saw "Chrome closed" every round.

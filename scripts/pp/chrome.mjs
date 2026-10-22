@@ -6,18 +6,48 @@ import { mkdirSync } from 'node:fs';
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+async function portOpen(port) {
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/json/version`, { signal: AbortSignal.timeout(2000) });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Closes a Chrome left on the debugging port by a watcher that died without cleaning up.
+ * Otherwise the new Chrome hands its window to the old one and exits at once, and the watcher
+ * thinks Chrome closed on every round.
+ */
+export async function closeChromeOnPort(port) {
+  const version = await portOpen(port);
+  if (!version) return false;
+  try {
+    const ws = new WebSocket(version.webSocketDebuggerUrl);
+    await new Promise((resolve, reject) => {
+      ws.addEventListener('open', resolve, { once: true });
+      ws.addEventListener('error', reject, { once: true });
+    });
+    ws.send(JSON.stringify({ id: 1, method: 'Browser.close' }));
+  } catch {}
+  for (let i = 0; i < 40; i++) {
+    if (!(await portOpen(port))) return true;
+    await sleep(250);
+  }
+  throw new Error(`An old Chrome is still holding debugging port ${port}. Quit it and try again.`);
+}
+
 export async function launchChrome({ port, profileDir }) {
   mkdirSync(profileDir, { recursive: true });
+  await closeChromeOnPort(port);
   const proc = spawn(
     CHROME,
     [`--remote-debugging-port=${port}`, `--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', 'about:blank'],
     { stdio: 'ignore' },
   );
   for (let i = 0; i < 60; i++) {
-    try {
-      const res = await fetch(`http://127.0.0.1:${port}/json/version`);
-      if (res.ok) return proc;
-    } catch {}
+    if (await portOpen(port)) return proc;
     await sleep(250);
   }
   proc.kill();
@@ -25,19 +55,28 @@ export async function launchChrome({ port, profileDir }) {
 }
 
 /** Connects to the first open tab. */
-export async function connectPage(port) {
-  const targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
+export async function connectPage(port, { timeoutMs = 60_000 } = {}) {
+  const targets = await (await fetch(`http://127.0.0.1:${port}/json`, { signal: AbortSignal.timeout(10_000) })).json();
   const target = targets.find((t) => t.type === 'page');
   if (!target) throw new Error('No Chrome tab to drive');
   const ws = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
-    ws.addEventListener('open', resolve, { once: true });
-    ws.addEventListener('error', () => reject(new Error('DevTools socket failed')), { once: true });
+    const timer = setTimeout(() => {
+      ws.close();
+      reject(new Error("Chrome's DevTools socket didn't open in 10s"));
+    }, 10_000);
+    ws.addEventListener('open', () => (clearTimeout(timer), resolve()), { once: true });
+    ws.addEventListener('error', () => (clearTimeout(timer), reject(new Error('DevTools socket failed'))), { once: true });
   });
   let seq = 0;
   const pending = new Map();
   ws.addEventListener('message', (event) => {
-    const msg = JSON.parse(event.data);
+    let msg;
+    try {
+      msg = JSON.parse(event.data);
+    } catch {
+      return;
+    }
     const waiter = msg.id !== undefined && pending.get(msg.id);
     if (!waiter) return;
     pending.delete(msg.id);
@@ -48,9 +87,10 @@ export async function connectPage(port) {
     for (const w of pending.values()) w.reject(new Error('Chrome closed'));
     pending.clear();
   });
-  // A closed socket swallows sends silently, so without these checks a closed tab leaves the
-  // watcher awaiting forever and Node exits with "unsettled top-level await" instead of restarting.
-  const send = (method, params = {}, timeoutMs = 60_000) =>
+  // A closed socket swallows sends silently. Without the open check and the timeout, a tab that
+  // closes between rounds leaves the watcher awaiting a reply that never comes, and Node exits
+  // with code 13 ("unsettled top-level await") instead of restarting. That's what happened on 10/2.
+  const send = (method, params = {}) =>
     new Promise((resolve, reject) => {
       if (ws.readyState !== WebSocket.OPEN) return reject(new Error('Chrome closed'));
       const id = ++seq;
@@ -63,7 +103,12 @@ export async function connectPage(port) {
         fn(value);
       };
       pending.set(id, { resolve: done(resolve), reject: done(reject) });
-      ws.send(JSON.stringify({ id, method, params }));
+      try {
+        ws.send(JSON.stringify({ id, method, params }));
+      } catch (error) {
+        pending.delete(id);
+        done(reject)(error);
+      }
     });
 
   return {
@@ -77,6 +122,7 @@ export async function connectPage(port) {
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
       return result.value;
     },
+    isOpen: () => ws.readyState === WebSocket.OPEN,
     close: () => ws.close(),
   };
 }
