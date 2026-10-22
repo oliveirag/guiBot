@@ -38,3 +38,8 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 ## Suggestions
 - Votes are buttons, not reactions, so each person gets one vote and counts can't be faked. `/suggest` has a 60s cooldown.
 - Anonymous suggestions via `/suggest anonymous:true` (Gui, 2026-09-29). Author id is still stored so the verdict can be DMed; mods can't see it through the bot. No separate reviewed channel.
+
+## Deploy (2026-10-22)
+- /pp not live: the code registers /pp fine (49 global commands, valid payload). Likely cause is Railway's `ENABLED_MODULES` leaving out `pp`, or the deploy step failing. I made boot and `dist/deploy.js` log skipped modules, every deployed command, and the deploy error instead of guessing.
+- /pp defaults to Manage Server, so members without it never see the command. Left as is.
+- `tests/modules/dev/ingest.test.ts` concurrent-burst test is flaky on main too (SQLite contention). Not touched.
