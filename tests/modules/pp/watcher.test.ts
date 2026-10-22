@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { WebSocketServer } from 'ws';
+import { launchAgentPlist } from '../../../scripts/pp/autostart.mjs';
 import { closeChromeOnPort, connectPage } from '../../../scripts/pp/chrome.mjs';
 import { supervise } from '../../../scripts/pp/supervise.mjs';
 import { keepWatching } from '../../../scripts/pp/watcher.mjs';
@@ -80,6 +81,40 @@ describe('connectPage', () => {
     const page = await connectPage(chrome.port, { timeoutMs: 100 });
     await expect(page.evaluate('1')).rejects.toThrow("Chrome didn't answer Runtime.evaluate");
     page.close();
+  });
+});
+
+describe('setWindowState', () => {
+  it('minimizes the window, and brings it to the front when shown', async () => {
+    chrome = await fakeChrome();
+    const page = await connectPage(chrome.port);
+    await page.setWindowState('minimized');
+    await page.setWindowState('normal');
+    expect(chrome.state.methods).toEqual([
+      'Browser.getWindowForTarget',
+      'Browser.setWindowBounds',
+      'Browser.getWindowForTarget',
+      'Browser.setWindowBounds',
+      'Page.bringToFront',
+    ]);
+    page.close();
+  });
+});
+
+describe('launchAgentPlist', () => {
+  it('runs the supervised watcher at login and restarts it only after a crash', () => {
+    const plist = launchAgentPlist({ node: '/opt/homebrew/bin/node', root: '/Users/g/guiBot' });
+    expect(plist).toContain('<string>/opt/homebrew/bin/node</string>\n    <string>/Users/g/guiBot/scripts/pp-watch.mjs</string>');
+    expect(plist).toContain('<key>RunAtLoad</key>\n  <true/>');
+    expect(plist).toMatch(/<key>SuccessfulExit<\/key>\s*<false\/>/);
+    expect(plist).toContain('/Users/g/guiBot/scripts/.pp-watch.log');
+    expect(plist).not.toContain('caffeinate');
+  });
+
+  it('keeps the Mac awake when asked, and escapes paths', () => {
+    const plist = launchAgentPlist({ node: '/usr/local/bin/node', root: '/Users/g/R&D', stayAwake: true });
+    expect(plist).toContain('<string>/usr/bin/caffeinate</string>\n    <string>-i</string>');
+    expect(plist).toContain('/Users/g/R&amp;D/scripts/pp-watch.mjs');
   });
 });
 

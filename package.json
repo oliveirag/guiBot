@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "db:migrate": "prisma migrate dev",
     "pp:watch": "node scripts/pp-watch.mjs",
+    "pp:autostart": "node scripts/pp-autostart.mjs",
     "pp:probe": "node scripts/pp-probe.mjs"
   },
   "dependencies": {
