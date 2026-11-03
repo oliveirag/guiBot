@@ -122,6 +122,12 @@ export async function connectPage(port, { timeoutMs = 60_000 } = {}) {
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
       return result.value;
     },
+    /** Minimizes ('minimized') or shows ('normal') this tab's Chrome window. */
+    async setWindowState(windowState) {
+      const { windowId } = await send('Browser.getWindowForTarget');
+      await send('Browser.setWindowBounds', { windowId, bounds: { windowState } });
+      if (windowState === 'normal') await send('Page.bringToFront');
+    },
     isOpen: () => ws.readyState === WebSocket.OPEN,
     close: () => ws.close(),
   };

@@ -2,7 +2,8 @@
 // and server traffic), polls every profile guiBot tracks, and sends their open slips to guiBot.
 // Started and restarted by scripts/pp-watch.mjs. Run it directly to skip the supervisor.
 // Usage: node scripts/pp/run.mjs [--url http://localhost:3000] [--rounds N]
-// Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS
+// Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS, PP_SHOW_CHROME=1 to keep the window up
+import { execFile } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -22,6 +23,8 @@ const ROUNDS = Number(args.rounds) || Infinity;
 const POLL_MS = Number(process.env.PP_POLL_MS) || 5000;
 const PORT = 9335;
 const PROFILES_EVERY_MS = 30_000;
+// Chrome sits minimized in the Dock and only comes up when PrizePicks wants a captcha.
+const SHOW_CHROME = process.env.PP_SHOW_CHROME === '1';
 const WARMUP_URL = 'https://app.prizepicks.com/p/go0QDE3G/open-lineups';
 /** Exit code for setup mistakes, so the supervisor doesn't restart into the same error. */
 const CONFIG_ERROR = 2;
@@ -33,6 +36,21 @@ const say = (...args) => console.log(stamp(), ...args);
 if (!TOKEN) {
   console.error('Set PP_WATCHER_TOKEN in .env (the same value as on Railway).');
   process.exit(CONFIG_ERROR);
+}
+
+/** A macOS notification, so a captcha doesn't sit unnoticed behind a minimized window. */
+function notify(message) {
+  if (process.platform !== 'darwin') return;
+  execFile('osascript', ['-e', `display notification ${JSON.stringify(message)} with title "guiBot PrizePicks"`], () => {});
+}
+
+async function setWindow(page, state) {
+  if (SHOW_CHROME) return;
+  try {
+    await page.setWindowState(state);
+  } catch (error) {
+    say(`Couldn't ${state === 'minimized' ? 'minimize' : 'show'} Chrome: ${error.message}`);
+  }
 }
 
 async function guibot(path, body) {
@@ -70,6 +88,7 @@ async function run({ beat, signal }) {
   try {
     say('Opening PrizePicks in Chrome...');
     await page.goto(WARMUP_URL, 9000);
+    await setWindow(page, 'minimized');
 
     const profiles = new Map(); // id -> { username, avatarUrl } once fetched
     let lastProfilesAt = 0;
@@ -100,12 +119,20 @@ async function run({ beat, signal }) {
         }
         const res = await apiGet(page, `/v1/profiles/${id}/lineups?filter=pending`);
         if (res.status === 200) {
+          if (blocked > 0) {
+            say('Captcha cleared.');
+            await setWindow(page, 'minimized');
+          }
           blocked = 0;
           const result = await guibot('/pp/lineups', { profileId: id, profile: info ?? undefined, lineups: JSON.parse(res.body) });
           if (result.posted > 0) say(`${info?.username ?? id}: posted ${result.posted} new slip${result.posted === 1 ? '' : 's'}`);
           if (result.baselined > 0) say(`${info?.username ?? id}: first check, skipped ${result.baselined} open slip(s)`);
         } else if (res.status === 403 && res.body.includes('captcha')) {
           blocked++;
+          if (blocked === 1) {
+            notify('PrizePicks wants a captcha. Solve it in the Chrome window.');
+            await setWindow(page, 'normal');
+          }
           say(`PrizePicks wants a captcha. If one shows in the Chrome window, solve it. Reloading (${blocked})...`);
           await page.goto(WARMUP_URL, 9000);
           await sleep(Math.min(blocked * 15_000, 120_000));
@@ -124,6 +151,8 @@ async function run({ beat, signal }) {
   }
 }
 
+// Exit through process.exit so the exit hook closes Chrome (launchd stops us with SIGTERM).
 process.on('SIGINT', () => process.exit(0));
+process.on('SIGTERM', () => process.exit(0));
 say(`Sending slips to ${GUIBOT}`);
 await keepWatching(run, { say });

@@ -3,6 +3,7 @@ import type { ChildProcess } from 'node:child_process';
 export interface Page {
   goto(url: string, settleMs?: number): Promise<void>;
   evaluate(expression: string): Promise<unknown>;
+  setWindowState(state: 'minimized' | 'normal'): Promise<void>;
   isOpen(): boolean;
   close(): void;
 }
