@@ -13,8 +13,10 @@ import { prisma } from './db.js';
 import { parseEnv } from './env.js';
 
 const env = parseEnv(process.env);
-const registry = buildRegistry(await loadModules(fileURLToPath(new URL('./modules', import.meta.url)), env.enabledModules));
+const skipped: string[] = [];
+const registry = buildRegistry(await loadModules(fileURLToPath(new URL('./modules', import.meta.url)), env.enabledModules, skipped));
 log.info(`Loaded modules: ${registry.modules.map((m) => m.meta.name).join(', ')}`);
+if (skipped.length > 0) log.warn(`Skipped modules (not in ENABLED_MODULES): ${skipped.join(', ')}`);
 
 const client = new Client({
   intents: [

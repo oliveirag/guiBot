@@ -171,15 +171,25 @@ describe('mentions', () => {
     ({
       author: { bot: false },
       inGuild: () => true,
+      content: '',
       mentions: { users: new Map(), repliedUser: null },
       ...over,
     }) as never;
 
-  it('answers direct mentions and replies to the bot only', () => {
-    expect(isForBot(message({ mentions: { users: new Map([['bot', {}]]), repliedUser: null } }), 'bot')).toBe(true);
-    expect(isForBot(message({ mentions: { users: new Map(), repliedUser: { id: 'bot' } } }), 'bot')).toBe(true);
+  it('answers only when the bot is tagged in the text', () => {
+    expect(isForBot(message({ content: '<@bot> hey' }), 'bot')).toBe(true);
+    expect(isForBot(message({ content: 'hey <@!bot>' }), 'bot')).toBe(true);
     expect(isForBot(message({}), 'bot')).toBe(false);
-    expect(isForBot(message({ author: { bot: true }, mentions: { users: new Map([['bot', {}]]) } }), 'bot')).toBe(false);
+    expect(isForBot(message({ content: '<@other> hey' }), 'bot')).toBe(false);
+    expect(isForBot(message({ content: '<@bot>', inGuild: () => false }), 'bot')).toBe(false);
+    expect(isForBot(message({ author: { bot: true }, content: '<@bot> hey' }), 'bot')).toBe(false);
+  });
+
+  it('ignores replies to the bot, even with the reply ping on', () => {
+    const pinged = { users: new Map([['bot', {}]]), repliedUser: { id: 'bot' } };
+    expect(isForBot(message({ content: 'thanks', mentions: pinged }), 'bot')).toBe(false);
+    expect(isForBot(message({ content: 'thanks', mentions: { users: new Map(), repliedUser: { id: 'bot' } } }), 'bot')).toBe(false);
+    expect(isForBot(message({ content: '<@bot> one more', mentions: pinged }), 'bot')).toBe(true);
   });
 
   it('strips the mention', () => {

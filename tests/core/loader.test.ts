@@ -21,8 +21,10 @@ describe('loadModules', () => {
   });
 
   it('only loads enabled modules but always keeps alwaysOn ones', async () => {
-    const modules = await loadModules(root, ['something-else']);
+    const skipped: string[] = [];
+    const modules = await loadModules(root, ['something-else'], skipped);
     expect(modules.map((m) => m.meta.name)).toEqual(['alpha']);
+    expect(skipped).toEqual(['beta']);
   });
 });
 

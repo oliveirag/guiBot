@@ -12,6 +12,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Cooldown default 20s per user. Owners skip it.
 - Uses Gemini REST directly (no SDK), thinking disabled for speed, max ~600 output tokens.
 - `/ask` replies publicly and quotes the question on top. Mentions reply without pinging you back.
+- Only an explicit @guiBot in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
 
 ## Moderation + logs
 - DMs on action are on by default (`/config mod dm`).
@@ -47,3 +48,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Tracking without the watcher isn't possible automatically: DataDome blocks Railway and headless, and PrizePicks sends no emails. Gui picked "hidden Chrome" and said to run it all the time, not only game hours (2026-10-22).
 - Chrome now starts minimized and comes up with a macOS notification on a captcha, then minimizes again once a check passes. `PP_SHOW_CHROME=1` keeps it visible. Not verified yet that DataDome treats a minimized window the same.
 - `npm run pp:autostart -- on` installs a LaunchAgent (com.guibot.ppwatch) that starts the supervised watcher at login and restarts it after a crash. `--stay-awake` (wraps it in `caffeinate -i`) is off by default because it changes how your Mac sleeps.
+## Deploy (2026-10-22)
+- /pp not live: the code registers /pp fine (49 global commands, valid payload). Likely cause is Railway's `ENABLED_MODULES` leaving out `pp`, or the deploy step failing. I made boot and `dist/deploy.js` log skipped modules, every deployed command, and the deploy error instead of guessing.
+- /pp defaults to Manage Server, so members without it never see the command. Left as is.
+- `tests/modules/dev/ingest.test.ts` concurrent-burst test is flaky on main too (SQLite contention). Not touched.

@@ -6,16 +6,22 @@ import { createGemini } from '../lib/gemini.js';
 import { fetchHistory } from '../lib/history.js';
 import { answer, checkGate, failureMessage } from '../lib/reply.js';
 
-type Incoming = Pick<Message, 'author' | 'mentions' | 'inGuild'>;
+type Incoming = Pick<Message, 'author' | 'content' | 'inGuild'>;
 
-/** Direct @mentions and replies to the bot. Not @everyone, and never other bots. */
+const mentionPattern = (botId: string, flags = ''): RegExp => new RegExp(`<@!?${botId}>`, flags);
+
+/**
+ * Only an explicit @guiBot typed in the message. A plain reply to the bot doesn't count, even with its
+ * reply ping on, since Discord adds that ping to message.mentions without it being in the text.
+ * Not @everyone, and never other bots.
+ */
 export function isForBot(message: Incoming, botId: string): boolean {
   if (message.author.bot || !message.inGuild()) return false;
-  return message.mentions.users.has(botId) || message.mentions.repliedUser?.id === botId;
+  return mentionPattern(botId).test(message.content);
 }
 
 export function stripMention(content: string, botId: string): string {
-  return content.replace(new RegExp(`<@!?${botId}>`, 'g'), '').trim();
+  return content.replace(mentionPattern(botId, 'g'), '').trim();
 }
 
 export default event({
