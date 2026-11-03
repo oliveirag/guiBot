@@ -93,7 +93,7 @@ The `ai` module answers in Gui's voice with Gemini. Set `GEMINI_API_KEY` (and op
 default `gemini-2.5-flash`).
 
 - `/ask question`: answers in the channel. It reads the last 15 messages there for context.
-- @mention guiBot or reply to one of its messages to talk to it.
+- @mention guiBot in your message to talk to it. Replying to one of its messages without tagging it gets no answer.
 - In a server with Senior Design set up, it also sees the active sprint, deadlines, and recent GitHub/Jira activity.
 
 It's on in every channel. Turn it off in one with `/config ai channel #channel enabled:false` (threads follow

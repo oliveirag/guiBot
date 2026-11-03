@@ -12,6 +12,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Cooldown default 20s per user. Owners skip it.
 - Uses Gemini REST directly (no SDK), thinking disabled for speed, max ~600 output tokens.
 - `/ask` replies publicly and quotes the question on top. Mentions reply without pinging you back.
+- Only an explicit @guiBot in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
 
 ## Moderation + logs
 - DMs on action are on by default (`/config mod dm`).
