@@ -71,6 +71,8 @@ export interface ProfileInfo {
 export interface IngestResult {
   posted: number;
   baselined: number;
+  /** Slips whose post hit a temporary Discord error. They stay unseen, so the next poll retries them. */
+  failed: number;
 }
 
 const isUniqueViolation = (error: unknown): boolean =>
@@ -87,13 +89,20 @@ async function claim(guildId: string, profileId: string, wagerId: string): Promi
   }
 }
 
+/** Undoes a claim so the next poll tries the slip again. */
+const release = (guildId: string, profileId: string, wagerId: string) =>
+  prisma.ppSeen.deleteMany({ where: { guildId, profileId, wagerId } });
+
 /**
  * Posts slips each tracking guild hasn't seen. A guild's first poll after /pp track only records
  * slips placed before the track, so tracking someone doesn't dump their old slips into the channel
  * but a slip placed between /pp track and that first poll still posts.
+ *
+ * A slip stays claimed only once it's posted or its channel is gone for good. A temporary Discord
+ * error releases the claim and moves on, so that slip posts on a later poll instead of being lost.
  */
 export async function ingestSlips(client: Client, profileId: string, slips: Slip[], profile: ProfileInfo = {}): Promise<IngestResult> {
-  const result: IngestResult = { posted: 0, baselined: 0 };
+  const result: IngestResult = { posted: 0, baselined: 0, failed: 0 };
   const tracks = await prisma.ppTrack.findMany({ where: { profileId } });
   for (const t of tracks) {
     if (!(await isModuleEnabled(t.guildId, 'pp'))) continue;
@@ -110,7 +119,15 @@ export async function ingestSlips(client: Client, profileId: string, slips: Slip
         result.baselined++;
         continue;
       }
-      const sent = await sendTo(client, t.channelId, { embeds: [slipEmbed(s, { profileId, ...info })] });
+      let sent;
+      try {
+        sent = await sendTo(client, t.channelId, { embeds: [slipEmbed(s, { profileId, ...info })] });
+      } catch (error) {
+        await release(t.guildId, profileId, s.id);
+        result.failed++;
+        log.warn(`pp: posting slip ${s.id} for ${profileId} in ${t.channelId} failed, retrying next poll`, error);
+        continue;
+      }
       if (sent) result.posted++;
       else log.warn(`pp: couldn't post slip ${s.id} for ${profileId} in ${t.channelId}`);
     }
