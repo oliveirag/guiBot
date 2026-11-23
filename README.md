@@ -196,6 +196,7 @@ The `pp` module posts a card in Discord a few seconds after a tracked profile pl
 - PrizePicks blocks servers and headless browsers, so the polling runs on a Mac with Google Chrome: `npm run pp:watch`.
   It opens its own Chrome window (keep it open, and solve a captcha there if PrizePicks asks), checks every tracked
   profile every 5 seconds (`PP_POLL_MS`), and sends open slips to guiBot, which posts only the new ones.
+  If Discord has a hiccup while posting a slip, that slip posts on the next check instead of being skipped.
   If Chrome closes or stops answering, the watcher logs why and reopens it. If the watcher process itself dies,
   `pp:watch` logs the exit code and starts it again (10s, backing off to 5 min while it keeps crashing).
 - Chrome stays minimized in the Dock. On a captcha it pops up and macOS shows a notification; it minimizes again

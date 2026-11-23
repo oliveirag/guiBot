@@ -127,6 +127,7 @@ async function run({ beat, signal }) {
           const result = await guibot('/pp/lineups', { profileId: id, profile: info ?? undefined, lineups: JSON.parse(res.body) });
           if (result.posted > 0) say(`${info?.username ?? id}: posted ${result.posted} new slip${result.posted === 1 ? '' : 's'}`);
           if (result.baselined > 0) say(`${info?.username ?? id}: first check, skipped ${result.baselined} open slip(s)`);
+          if (result.failed > 0) say(`${info?.username ?? id}: ${result.failed} slip(s) failed to post, retrying next check`);
         } else if (res.status === 403 && res.body.includes('captcha')) {
           blocked++;
           if (blocked === 1) {

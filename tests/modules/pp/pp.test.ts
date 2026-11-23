@@ -131,15 +131,15 @@ describe('ingest', () => {
     await track();
     const { client, sent } = fakeDiscord();
     const first = await ingestSlips(client, P, parseLineups(fixture), { username: 'JerimiaFrasier' });
-    expect(first).toEqual({ posted: 0, baselined: 1 });
+    expect(first).toEqual({ posted: 0, baselined: 1, failed: 0 });
     expect(sent).toHaveLength(0);
 
     const second = await ingestSlips(client, P, parseLineups(withExtraSlip('new-1')));
-    expect(second).toEqual({ posted: 1, baselined: 0 });
+    expect(second).toEqual({ posted: 1, baselined: 0, failed: 0 });
     expect(sent[0]?.channelId).toBe('c1');
     expect(embeds(sent[0]!.message)[0]?.author?.name).toBe('JerimiaFrasier');
 
-    expect(await ingestSlips(client, P, parseLineups(withExtraSlip('new-1')))).toEqual({ posted: 0, baselined: 0 });
+    expect(await ingestSlips(client, P, parseLineups(withExtraSlip('new-1')))).toEqual({ posted: 0, baselined: 0, failed: 0 });
     expect(sent).toHaveLength(1);
   });
 
@@ -148,7 +148,7 @@ describe('ingest', () => {
     const { client, sent } = fakeDiscord();
     const placedAfter = new Date(t.createdAt.getTime() + 60_000).toISOString();
     const first = await ingestSlips(client, P, parseLineups(withExtraSlip('after-track', placedAfter)));
-    expect(first).toEqual({ posted: 1, baselined: 1 });
+    expect(first).toEqual({ posted: 1, baselined: 1, failed: 0 });
     expect(sent).toHaveLength(1);
     expect(embeds(sent[0]!.message)[0]?.footer?.text).toContain('after-track');
   });
@@ -168,9 +168,33 @@ describe('ingest', () => {
     await track(G, 'gone');
     const { client, sent } = fakeDiscord({ gone: apiError(10003) });
     await ingestSlips(client, P, []);
-    expect(await ingestSlips(client, P, parseLineups(fixture))).toEqual({ posted: 0, baselined: 0 });
+    expect(await ingestSlips(client, P, parseLineups(fixture))).toEqual({ posted: 0, baselined: 0, failed: 0 });
     expect(await prisma.ppSeen.count()).toBe(1);
     expect(sent).toHaveLength(0);
+  });
+
+  it('retries a slip whose post hit a temporary Discord error', async () => {
+    await track(G, 'flaky');
+    const fail: Record<string, Error> = { flaky: apiError(500) };
+    const { client, sent } = fakeDiscord(fail);
+    await ingestSlips(client, P, []);
+
+    expect(await ingestSlips(client, P, parseLineups(fixture))).toEqual({ posted: 0, baselined: 0, failed: 1 });
+    expect(await prisma.ppSeen.count()).toBe(0);
+
+    delete fail.flaky;
+    expect(await ingestSlips(client, P, parseLineups(fixture))).toEqual({ posted: 1, baselined: 0, failed: 0 });
+    expect(sent).toHaveLength(1);
+    expect(await prisma.ppSeen.count()).toBe(1);
+  });
+
+  it('keeps posting to other guilds when one post fails', async () => {
+    await track(G, 'flaky');
+    await track('g2', 'c2');
+    const { client, sent } = fakeDiscord({ flaky: apiError(500) });
+    await ingestSlips(client, P, []);
+    expect(await ingestSlips(client, P, parseLineups(fixture))).toEqual({ posted: 1, baselined: 0, failed: 1 });
+    expect(sent.map((s) => s.channelId)).toEqual(['c2']);
   });
 });
 
@@ -198,8 +222,8 @@ describe('watcher routes', () => {
 
     const post = (lineups: unknown) =>
       server.inject({ method: 'POST', url: '/pp/lineups', headers: auth, payload: { profileId: P, profile: { username: 'J' }, lineups } });
-    expect((await post(fixture)).json()).toEqual({ slips: 1, posted: 0, baselined: 1 });
-    expect((await post(withExtraSlip('new-1'))).json()).toEqual({ slips: 2, posted: 1, baselined: 0 });
+    expect((await post(fixture)).json()).toEqual({ slips: 1, posted: 0, baselined: 1, failed: 0 });
+    expect((await post(withExtraSlip('new-1'))).json()).toEqual({ slips: 2, posted: 1, baselined: 0, failed: 0 });
     expect(sent).toHaveLength(1);
     expect((await server.inject({ method: 'POST', url: '/pp/lineups', headers: auth, payload: { profileId: '../x' } })).statusCode).toBe(400);
   });
