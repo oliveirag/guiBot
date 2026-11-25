@@ -64,9 +64,10 @@ Decisions I made on my own while you were away. Each has the default I picked; t
   nothing changes; the watcher still defaults to the Railway host.
 - Gui picked "rename everything" (2026-11-25). The LaunchAgent is now `com.lobo.ppwatch`; `pp:autostart on` and `off`
   remove the old `com.guibot.ppwatch` first, and `status` warns if it's still running. The GitHub repo is now
-  `oliveirag/lobo` and the code points there. Gui moved Railway to `lobo-prod.up.railway.app`, now the
-  watcher's default. Still waiting on Gui: moving `/data/guibot.db` to `/data/lobo.db` together with
-  `DATABASE_URL`. Until then that path stays, and `legacy/` stays untouched.
+  `oliveirag/lobo` and the code points there. Gui moved Railway to `lobo-production.up.railway.app`, now the
+  watcher's default. The SQLite file moves to `/data/lobo.db` (Gui,
+  2026-11-24): rename the file on the volume first, then change `DATABASE_URL`, so prod never boots on an empty DB.
+  Code never hardcoded the path, only the docs did. `legacy/` stays untouched. Watcher fix is for another time.
 - Discord avatar: `assets/brand/discord/lobo-discord-avatar-transparent-1024.png`, made from the kit's avatar with the
   navy square removed and the husky scaled up 14% to fill the circle. In Discord's light theme the light grey face
   and legs are faint against white; dark themes look right.
