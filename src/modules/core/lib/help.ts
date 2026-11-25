@@ -13,7 +13,7 @@ export function buildHelp(registry: Registry, disabled: ReadonlySet<string>, com
     return info([json.description, ...options].join('\n'), `/${json.name}`).setFooter({ text: `Module: ${entry.module.name}` });
   }
 
-  const embed = info('Run `/help command:<name>` for details on one command.', 'guiBot commands');
+  const embed = info('Run `/help command:<name>` for details on one command.', 'lobo commands');
   for (const mod of registry.modules) {
     if (mod.commands.length === 0) continue;
     if (!mod.meta.alwaysOn && disabled.has(mod.meta.name)) continue;

@@ -9,7 +9,7 @@ export function toChatLines(messages: Iterable<HistoryMessage>, botId: string): 
     .filter((m) => m.content && (!m.author.bot || m.author.id === botId))
     .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
     .map((m) => ({
-      author: m.author.id === botId ? 'guiBot (you)' : (m.member?.displayName ?? m.author.displayName ?? m.author.username),
+      author: m.author.id === botId ? 'lobo (you)' : (m.member?.displayName ?? m.author.displayName ?? m.author.username),
       content: m.content,
     }));
 }

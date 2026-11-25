@@ -82,7 +82,7 @@ describe('prompt building', () => {
     const lines = toChatLines([msg('b', true, 'me', 2), msg('x', true, 'spam', 3), msg('u', false, 'hey', 1)], 'b');
     expect(lines).toEqual([
       { author: 'u', content: 'hey' },
-      { author: 'guiBot (you)', content: 'me' },
+      { author: 'lobo (you)', content: 'me' },
     ]);
   });
 });

@@ -15,7 +15,7 @@ const RESERVED = new Set(['view', 'modules']);
 export function configCommandData(modules: LoadedModule[]) {
   const data = new SlashCommandBuilder()
     .setName('config')
-    .setDescription('View or change guiBot settings for this server.')
+    .setDescription('View or change lobo settings for this server.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild)
     .addSubcommand((s) => s.setName('view').setDescription('Show current settings.'))

@@ -7,7 +7,7 @@ export interface RoleFacts {
   managed: boolean;
 }
 
-/** Why guiBot (on behalf of `actorTop`) can't hand out this role, or null. Pass null for the actor to skip their check. */
+/** Why lobo (on behalf of `actorTop`) can't hand out this role, or null. Pass null for the actor to skip their check. */
 export function roleProblem(role: RoleFacts, guildId: string, botTop: number, actorTop: number | null): string | null {
   if (role.id === guildId) return "That's @everyone.";
   if (role.managed) return "That role belongs to a bot or integration, so it can't be handed out.";
@@ -16,7 +16,7 @@ export function roleProblem(role: RoleFacts, guildId: string, botTop: number, ac
   return null;
 }
 
-/** Throws unless guiBot can give this role and the person asking outranks it (the owner always does). */
+/** Throws unless lobo can give this role and the person asking outranks it (the owner always does). */
 export async function assertAssignable(interaction: ChatInputCommandInteraction<'cached'>, role: Role): Promise<void> {
   const guild = interaction.guild;
   const me = guild.members.me ?? (await guild.members.fetchMe());

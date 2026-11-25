@@ -6,7 +6,7 @@ export const BOT = 'bot';
 
 type Cell = 'x' | 'o' | '-';
 
-/** The whole game lives in the button ids, so it survives restarts. `o` is BOT when playing guiBot. */
+/** The whole game lives in the button ids, so it survives restarts. `o` is BOT when playing lobo. */
 export interface Game {
   x: string;
   o: string;
@@ -47,7 +47,7 @@ function score(board: Cell[], me: 'x' | 'o', depth: number): number {
   return mover === me ? Math.max(...scores) : Math.min(...scores);
 }
 
-/** guiBot's move. Plays perfectly, but picks randomly among equally good moves so games differ. */
+/** lobo's move. Plays perfectly, but picks randomly among equally good moves so games differ. */
 export function bestMove(board: readonly Cell[], rng: () => number = Math.random): number {
   const me = turn(board);
   const work = [...board];
@@ -74,7 +74,7 @@ export function decode(customId: string): { game: Game; cell: number } | null {
 
 export type MoveResult = { ok: true; game: Game } | { ok: false; reason: string };
 
-/** Applies a click from `userId`, then guiBot's reply when it's playing. */
+/** Applies a click from `userId`, then lobo's reply when it's playing. */
 export function play(game: Game, cell: number, userId: string, rng?: () => number): MoveResult {
   if (winner(game.board)) return { ok: false, reason: 'This game is already over.' };
   if (userId !== game.x && userId !== game.o) return { ok: false, reason: "You're not in this game. Start your own with `/tictactoe`." };
@@ -87,7 +87,7 @@ export function play(game: Game, cell: number, userId: string, rng?: () => numbe
   return { ok: true, game: { ...game, board } };
 }
 
-const who = (id: string) => (id === BOT ? 'guiBot' : `<@${id}>`);
+const who = (id: string) => (id === BOT ? 'lobo' : `<@${id}>`);
 
 export function render(game: Game): Pick<InteractionUpdateOptions, 'embeds' | 'components'> {
   const w = winner(game.board);

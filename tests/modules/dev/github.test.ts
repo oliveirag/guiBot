@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeGithub } from '../../../src/modules/dev/lib/github.js';
 
-const repository = { full_name: 'OliveiraG/guiBot' };
+const repository = { full_name: 'OliveiraG/lobo' };
 const pr = (extra: Record<string, unknown> = {}) => ({
   number: 12,
   title: 'Add login',
-  html_url: 'https://github.com/OliveiraG/guiBot/pull/12',
+  html_url: 'https://github.com/OliveiraG/lobo/pull/12',
   user: { login: 'gui' },
   merged: false,
   merged_by: null,
@@ -20,11 +20,11 @@ describe('normalizeGithub', () => {
       {
         source: 'github',
         kind: 'pr.opened',
-        key: 'oliveirag/guibot',
+        key: 'oliveirag/lobo',
         actor: 'gui',
         actorName: 'gui',
         title: '#12 Add login',
-        url: 'https://github.com/OliveiraG/guiBot/pull/12',
+        url: 'https://github.com/OliveiraG/lobo/pull/12',
         detail: 'gui wants to merge into main',
         count: null,
         stream: null,
@@ -51,7 +51,7 @@ describe('normalizeGithub', () => {
   it('reports failed workflow runs only, with branch, commit, and who ran it', () => {
     const run = (conclusion: string) => ({
       action: 'completed',
-      repository: { ...repository, html_url: 'https://github.com/OliveiraG/guiBot' },
+      repository: { ...repository, html_url: 'https://github.com/OliveiraG/lobo' },
       workflow_run: {
         name: 'CI',
         head_branch: 'main',
@@ -70,7 +70,7 @@ describe('normalizeGithub', () => {
         actor: 'gui',
         detail: [
           '**Branch** main',
-          '**Commit** [`a1b2c3d`](https://github.com/OliveiraG/guiBot/commit/a1b2c3d4e5f6a7b8c9d0) Fix login redirect',
+          '**Commit** [`a1b2c3d`](https://github.com/OliveiraG/lobo/commit/a1b2c3d4e5f6a7b8c9d0) Fix login redirect',
           '**By** gui',
         ].join('\n'),
       },

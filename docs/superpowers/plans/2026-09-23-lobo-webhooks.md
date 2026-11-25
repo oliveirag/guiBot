@@ -1,4 +1,4 @@
-# guiBot Webhooks (Slice 2) Implementation Plan
+# lobo Webhooks (Slice 2) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 5.9 (ESM, NodeNext), Node 22, discord.js v14, Prisma 6 + SQLite, Fastify 5, zod 4, Vitest 3.
 
-**Spec:** `docs/superpowers/specs/2026-09-21-guibot-design.md` (see "Dev notifications", "Public-ready constraints", "Env vars"). Builds on `docs/superpowers/plans/2026-09-22-guibot-core.md`.
+**Spec:** `docs/superpowers/specs/2026-09-21-lobo-design.md` (see "Dev notifications", "Public-ready constraints", "Env vars"). Builds on `docs/superpowers/plans/2026-09-22-lobo-core.md`.
 
 ## Global Constraints
 
@@ -542,7 +542,7 @@ const RESERVED = new Set(['view', 'modules']);
 export function configCommandData(modules: LoadedModule[]) {
   const data = new SlashCommandBuilder()
     .setName('config')
-    .setDescription('View or change guiBot settings for this server.')
+    .setDescription('View or change lobo settings for this server.')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .setContexts(InteractionContextType.Guild)
     .addSubcommand((s) => s.setName('view').setDescription('Show current settings.'))
@@ -1112,8 +1112,8 @@ import { resetDb } from '../../db.js';
 
 describe('normalizeTarget', () => {
   it('lowercases GitHub repos and accepts pasted URLs', () => {
-    expect(normalizeTarget('github', 'oliveirag/guiBot')).toBe('oliveirag/guibot');
-    expect(normalizeTarget('github', ' https://github.com/oliveirag/guiBot.git/ ')).toBe('oliveirag/guibot');
+    expect(normalizeTarget('github', 'oliveirag/lobo')).toBe('oliveirag/lobo');
+    expect(normalizeTarget('github', ' https://github.com/oliveirag/lobo.git/ ')).toBe('oliveirag/lobo');
   });
 
   it('uppercases Jira project keys', () => {
@@ -1121,7 +1121,7 @@ describe('normalizeTarget', () => {
   });
 
   it('rejects things that are not a repo or project key', () => {
-    expect(() => normalizeTarget('github', 'guiBot')).toThrow(UserError);
+    expect(() => normalizeTarget('github', 'lobo')).toThrow(UserError);
     expect(() => normalizeTarget('jira', 'SD-12')).toThrow(UserError);
     expect(() => normalizeTarget('jira', '1SD')).toThrow(UserError);
   });
@@ -1219,7 +1219,7 @@ export function normalizeTarget(source: FeedSource, raw: string): string {
     .replace(/\.git$/i, '');
   if (source === 'github') {
     const key = value.toLowerCase();
-    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like oliveirag/guiBot.');
+    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like oliveirag/lobo.');
     return key;
   }
   const key = value.toUpperCase();
@@ -1447,11 +1447,11 @@ describe('verifySignature', () => {
 import { describe, expect, it } from 'vitest';
 import { normalizeGithub } from '../../../src/modules/dev/lib/github.js';
 
-const repository = { full_name: 'OliveiraG/guiBot' };
+const repository = { full_name: 'OliveiraG/lobo' };
 const pr = (extra: Record<string, unknown> = {}) => ({
   number: 12,
   title: 'Add login',
-  html_url: 'https://github.com/OliveiraG/guiBot/pull/12',
+  html_url: 'https://github.com/OliveiraG/lobo/pull/12',
   user: { login: 'gui' },
   merged: false,
   merged_by: null,
@@ -1466,11 +1466,11 @@ describe('normalizeGithub', () => {
       {
         source: 'github',
         kind: 'pr.opened',
-        key: 'oliveirag/guibot',
+        key: 'oliveirag/lobo',
         actor: 'gui',
         actorName: 'gui',
         title: '#12 Add login',
-        url: 'https://github.com/OliveiraG/guiBot/pull/12',
+        url: 'https://github.com/OliveiraG/lobo/pull/12',
         detail: 'gui wants to merge into main',
         count: null,
       },

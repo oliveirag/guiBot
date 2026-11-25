@@ -47,7 +47,7 @@ export default event({
       if (interaction.isButton()) await toggle(interaction);
       else await select(interaction);
     } catch (error) {
-      // Missing Permissions here means the role moved above guiBot after the panel was made.
+      // Missing Permissions here means the role moved above lobo after the panel was made.
       const code = (error as { code?: unknown }).code;
       const shown = code === 50013 ? new UserError("I can't give that role anymore. A mod needs to move my role above it.") : error;
       if (!(shown instanceof UserError)) log.error('roles: panel click failed', error);

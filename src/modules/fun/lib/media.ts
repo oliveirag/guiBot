@@ -6,7 +6,7 @@ export type JsonFetch = (url: string) => Promise<unknown>;
 const TIMEOUT_MS = 8_000;
 
 export const fetchJson: JsonFetch = async (url) => {
-  const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'user-agent': 'guiBot' } });
+  const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS), headers: { 'user-agent': 'lobo' } });
   if (!res.ok) throw new Error(`${url} answered ${res.status}`);
   return res.json();
 };

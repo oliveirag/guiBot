@@ -15,7 +15,7 @@ export const DEFAULT_ESCALATION_TIMEOUT = 3600;
 
 export type Punishment = 'warn' | 'timeout' | 'kick' | 'ban';
 
-// "<guild>:<user>" for bans guiBot is making right now. The ban event can land before the case is saved.
+// "<guild>:<user>" for bans lobo is making right now. The ban event can land before the case is saved.
 export const botBans = new Set<string>();
 
 const VERB: Record<Punishment, string> = { warn: 'warned', timeout: 'timed out', kick: 'kicked', ban: 'banned' };
@@ -118,7 +118,7 @@ export async function punish(input: PunishInput): Promise<PunishResult> {
       try {
         const result = await punish({
           ...input,
-          moderator: { id: guild.client.user.id, name: 'guiBot' },
+          moderator: { id: guild.client.user.id, name: 'lobo' },
           action: next.action,
           reason: `Reached ${count} warnings`,
           duration: next.action === 'timeout' ? (next.duration ?? DEFAULT_ESCALATION_TIMEOUT) : next.duration,

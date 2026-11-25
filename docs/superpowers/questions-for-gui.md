@@ -7,19 +7,19 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - After pushing, run `npm run deploy` (or however you deployed slash commands last time) so the new commands show up.
 
 ## AI
-- Persona: your website prompt, trimmed to voice + a few facts, reframed as "guiBot, Gui's bot, talks like him but actually helps". Resume details left out. OK?
+- Persona: your website prompt, trimmed to voice + a few facts, reframed as "lobo, Gui's bot, talks like him but actually helps". Resume details left out. OK?
 - AI is on in every channel (Gui, 2026-09-24). Turn off per channel with `/config ai channel`.
 - Cooldown default 20s per user. Owners skip it.
 - Uses Gemini REST directly (no SDK), thinking disabled for speed, max ~600 output tokens.
 - `/ask` replies publicly and quotes the question on top. Mentions reply without pinging you back.
-- Only an explicit @guiBot in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
+- Only an explicit @lobo in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
 
 ## Moderation + logs
 - DMs on action are on by default (`/config mod dm`).
 - Escalation fires once, exactly when active warns hit the threshold (not again at threshold+1). Default timeout 1h if you don't give a duration.
 - `/lockdown` removed (Gui, 2026-09-24). `/lock` and `/unlock` stay.
 - Log kinds: messages, members, roles (incl. nicknames), voice, modlog. `/config logs ignore` toggles a channel or category off message and voice logs (Gui, 2026-09-29).
-- guiBot needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
+- lobo needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
 
 ## Automod
 - All rules off by default. Default limits: spam 5 msgs/5s, duplicates 3 in 30s, mentions 5, caps 70% (10+ letters), new accounts 7 days.
@@ -47,9 +47,27 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - On start, a Chrome left on port 9335 by a dead watcher is closed first. Otherwise the new Chrome handed off to it and the watcher saw "Chrome closed" every round.
 - Tracking without the watcher isn't possible automatically: DataDome blocks Railway and headless, and PrizePicks sends no emails. Gui picked "hidden Chrome" and said to run it all the time, not only game hours (2026-10-22).
 - Chrome now starts minimized and comes up with a macOS notification on a captcha, then minimizes again once a check passes. `PP_SHOW_CHROME=1` keeps it visible. Not verified yet that DataDome treats a minimized window the same.
-- `npm run pp:autostart -- on` installs a LaunchAgent (com.guibot.ppwatch) that starts the supervised watcher at login and restarts it after a crash. `--stay-awake` (wraps it in `caffeinate -i`) is off by default because it changes how your Mac sleeps.
+- `npm run pp:autostart -- on` installs a LaunchAgent (com.lobo.ppwatch; `on` and `off` also remove the old com.guibot.ppwatch) that starts the supervised watcher at login and restarts it after a crash. `--stay-awake` (wraps it in `caffeinate -i`) is off by default because it changes how your Mac sleeps.
 - Dropped slips fix (2026-11-22): a slip is only marked seen once it's posted or its channel is gone for good (deleted, no access). A temporary Discord error (5xx, timeout, rate limit) un-marks it, so the next 5s check retries it, and the rest of that check keeps going for other slips and servers. Trade-off: if Discord took the message but the request still errored, the slip can post twice. I picked that over losing slips. The watcher log now says how many failed.
 ## Deploy (2026-10-22)
 - /pp not live: the code registers /pp fine (49 global commands, valid payload). Likely cause is Railway's `ENABLED_MODULES` leaving out `pp`, or the deploy step failing. I made boot and `dist/deploy.js` log skipped modules, every deployed command, and the deploy error instead of guessing.
 - /pp defaults to Manage Server, so members without it never see the command. Left as is.
 - `tests/modules/dev/ingest.test.ts` concurrent-burst test is flaky on main too (SQLite contention). Not touched.
+
+## Rebrand to lobo (2026-11-25)
+- Every user-facing "guiBot" is now "lobo": command descriptions, embeds (`/about`, `/help`), the AI persona and
+  history label, moderator names on cases and audit-log reasons ("lobo: Reached 2 warnings", "lobo automod"),
+  the fun module, README, the docs (the three `docs/superpowers` plan and spec files were renamed too), and the
+  `package.json` name. Old mod cases saved before the switch still say guiBot.
+- Written lowercase everywhere, even at the start of a sentence, to match the wordmark.
+- `GUIBOT_URL` is now `LOBO_URL` in the PrizePicks watcher and `.env.example`. Your Mac's `.env` doesn't set it, so
+  nothing changes; the watcher still defaults to the Railway host.
+- Gui picked "rename everything" (2026-11-25). The LaunchAgent is now `com.lobo.ppwatch`; `pp:autostart on` and `off`
+  remove the old `com.guibot.ppwatch` first, and `status` warns if it's still running. The GitHub repo is now
+  `oliveirag/lobo` and the code points there. Gui moved Railway to `lobo-prod.up.railway.app`, now the
+  watcher's default. Still waiting on Gui: moving `/data/guibot.db` to `/data/lobo.db` together with
+  `DATABASE_URL`. Until then that path stays, and `legacy/` stays untouched.
+- Discord avatar: `assets/brand/discord/lobo-discord-avatar-transparent-1024.png`, made from the kit's avatar with the
+  navy square removed and the husky scaled up 14% to fill the circle. In Discord's light theme the light grey face
+  and legs are faint against white; dark themes look right.
+- The bot's Discord username and avatar aren't changed by code. They're set in the Developer Portal.

@@ -11,7 +11,7 @@ type Incoming = Pick<Message, 'author' | 'content' | 'inGuild'>;
 const mentionPattern = (botId: string, flags = ''): RegExp => new RegExp(`<@!?${botId}>`, flags);
 
 /**
- * Only an explicit @guiBot typed in the message. A plain reply to the bot doesn't count, even with its
+ * Only an explicit @lobo typed in the message. A plain reply to the bot doesn't count, even with its
  * reply ping on, since Discord adds that ping to message.mentions without it being in the text.
  * Not @everyone, and never other bots.
  */

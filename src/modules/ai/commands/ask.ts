@@ -9,7 +9,7 @@ import { answer, checkGate, failureMessage, forDiscord } from '../lib/reply.js';
 export default command({
   data: new SlashCommandBuilder()
     .setName('ask')
-    .setDescription('Ask guiBot something. It sees the last few messages here.')
+    .setDescription('Ask lobo something. It sees the last few messages here.')
     .setContexts(InteractionContextType.Guild)
     .addStringOption((o) => o.setName('question').setDescription('What you want to know').setRequired(true).setMaxLength(1000)),
   guildOnly: true,

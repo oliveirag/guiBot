@@ -1,7 +1,7 @@
 // PrizePicks watcher. Runs on Gui's Mac with a real Chrome window and restarts the watcher
 // process (scripts/pp/run.mjs) if it ever dies, logging why.
 // Usage: npm run pp:watch [-- --url http://localhost:3000] [--rounds N]
-// Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS
+// Env (from .env): PP_WATCHER_TOKEN, LOBO_URL, PP_POLL_MS
 import { fileURLToPath } from 'node:url';
 import { supervise } from './pp/supervise.mjs';
 

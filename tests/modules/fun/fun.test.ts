@@ -96,7 +96,7 @@ describe('tic-tac-toe', () => {
     expect(encode(newGame('123456789012345678', '876543210987654321'), 8).length).toBeLessThanOrEqual(100);
   });
 
-  it('enforces turns and squares, and guiBot answers', () => {
+  it('enforces turns and squares, and lobo answers', () => {
     const pvp = newGame('a', 'b');
     expect(play(pvp, 0, 'b')).toEqual({ ok: false, reason: "It's not your turn." });
     expect(play(pvp, 0, 'z')).toMatchObject({ ok: false, reason: expect.stringMatching(/not in this game/) });

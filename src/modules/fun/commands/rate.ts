@@ -6,7 +6,7 @@ import { stableScore } from '../lib/random.js';
 export default command({
   data: new SlashCommandBuilder()
     .setName('rate')
-    .setDescription('guiBot rates anything out of 10.')
+    .setDescription('lobo rates anything out of 10.')
     .addStringOption((o) => o.setName('thing').setDescription('What to rate').setRequired(true).setMaxLength(200)),
   cooldownSeconds: 2,
   async run({ interaction }) {

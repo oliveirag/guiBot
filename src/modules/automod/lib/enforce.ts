@@ -14,7 +14,7 @@ const PUNISH_COOLDOWN = 15;
 
 const punished = new Cooldowns();
 
-export const AUTOMOD = (botId: string) => ({ id: botId, name: 'guiBot automod' });
+export const AUTOMOD = (botId: string) => ({ id: botId, name: 'lobo automod' });
 
 /** Mods, exempt roles, and exempt channels (threads follow their parent) skip automod. */
 export function isExempt(
