@@ -31,7 +31,7 @@ export default event({
       userId: ban.user.id,
       userTag: ban.user.tag,
       moderatorId: entry?.executorId ?? ban.client.user.id,
-      reason: entry?.reason ?? ban.reason ?? 'Banned outside guiBot',
+      reason: entry?.reason ?? ban.reason ?? 'Banned outside lobo',
     });
     await announce(ban.client, c);
   },

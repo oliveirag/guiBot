@@ -6,9 +6,9 @@ import { BOT, newGame, render } from '../lib/tictactoe.js';
 export default command({
   data: new SlashCommandBuilder()
     .setName('tictactoe')
-    .setDescription('Play tic-tac-toe with someone, or against guiBot.')
+    .setDescription('Play tic-tac-toe with someone, or against lobo.')
     .setContexts(InteractionContextType.Guild)
-    .addUserOption((o) => o.setName('opponent').setDescription('Who to play (default: guiBot)')),
+    .addUserOption((o) => o.setName('opponent').setDescription('Who to play (default: lobo)')),
   guildOnly: true,
   cooldownSeconds: 5,
   async run({ interaction }) {

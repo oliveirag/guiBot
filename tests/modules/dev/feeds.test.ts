@@ -44,7 +44,7 @@ describe('normalizeTarget', () => {
   });
 
   it('rejects things that are not a repo or project key', () => {
-    expect(() => normalizeTarget('github', 'guiBot')).toThrow(UserError);
+    expect(() => normalizeTarget('github', 'lobo')).toThrow(UserError);
     expect(() => normalizeTarget('jira', 'SD-12')).toThrow(UserError);
     expect(() => normalizeTarget('jira', '1SD')).toThrow(UserError);
   });

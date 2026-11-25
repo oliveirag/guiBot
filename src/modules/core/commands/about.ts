@@ -7,11 +7,11 @@ import { formatUptime } from '../lib/format.js';
 const pkg = JSON.parse(readFileSync(new URL('../../../../package.json', import.meta.url), 'utf8')) as { version: string };
 
 export default command({
-  data: new SlashCommandBuilder().setName('about').setDescription('What guiBot is and what it runs.'),
+  data: new SlashCommandBuilder().setName('about').setDescription('What lobo is and what it runs.'),
   async run({ interaction, registry }) {
     const embed = info(
       "Gui's personal everything bot. Moderation, levels, team tracking, and whatever gets added next.",
-      'guiBot',
+      'lobo',
     ).addFields(
       { name: 'Version', value: pkg.version, inline: true },
       { name: 'Modules', value: String(registry.modules.length), inline: true },

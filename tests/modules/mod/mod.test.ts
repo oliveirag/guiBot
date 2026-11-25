@@ -293,7 +293,7 @@ describe('punish', () => {
     expect((await punish(input)).escalated).toBeNull();
     const second = await punish(input);
     expect(second.escalated).toMatchObject({ action: 'timeout', moderatorId: 'bot', duration: 3600, reason: 'Reached 2 warnings' });
-    expect(member.timeout).toHaveBeenCalledWith(3_600_000, 'guiBot: Reached 2 warnings');
+    expect(member.timeout).toHaveBeenCalledWith(3_600_000, 'lobo: Reached 2 warnings');
   });
 });
 

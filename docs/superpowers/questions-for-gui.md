@@ -7,19 +7,19 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - After pushing, run `npm run deploy` (or however you deployed slash commands last time) so the new commands show up.
 
 ## AI
-- Persona: your website prompt, trimmed to voice + a few facts, reframed as "guiBot, Gui's bot, talks like him but actually helps". Resume details left out. OK?
+- Persona: your website prompt, trimmed to voice + a few facts, reframed as "lobo, Gui's bot, talks like him but actually helps". Resume details left out. OK?
 - AI is on in every channel (Gui, 2026-09-24). Turn off per channel with `/config ai channel`.
 - Cooldown default 20s per user. Owners skip it.
 - Uses Gemini REST directly (no SDK), thinking disabled for speed, max ~600 output tokens.
 - `/ask` replies publicly and quotes the question on top. Mentions reply without pinging you back.
-- Only an explicit @guiBot in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
+- Only an explicit @lobo in the message text triggers a reply (Gui, 2026-11-02). Replies to the bot are ignored, even with the reply ping on. A reply that also tags it still answers.
 
 ## Moderation + logs
 - DMs on action are on by default (`/config mod dm`).
 - Escalation fires once, exactly when active warns hit the threshold (not again at threshold+1). Default timeout 1h if you don't give a duration.
 - `/lockdown` removed (Gui, 2026-09-24). `/lock` and `/unlock` stay.
 - Log kinds: messages, members, roles (incl. nicknames), voice, modlog. `/config logs ignore` toggles a channel or category off message and voice logs (Gui, 2026-09-29).
-- guiBot needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
+- lobo needs these Discord permissions for all of this: Ban Members, Kick Members, Moderate Members, Manage Messages, Manage Channels, Manage Roles, View Audit Log.
 
 ## Automod
 - All rules off by default. Default limits: spam 5 msgs/5s, duplicates 3 in 30s, mentions 5, caps 70% (10+ letters), new accounts 7 days.
@@ -53,3 +53,20 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - /pp not live: the code registers /pp fine (49 global commands, valid payload). Likely cause is Railway's `ENABLED_MODULES` leaving out `pp`, or the deploy step failing. I made boot and `dist/deploy.js` log skipped modules, every deployed command, and the deploy error instead of guessing.
 - /pp defaults to Manage Server, so members without it never see the command. Left as is.
 - `tests/modules/dev/ingest.test.ts` concurrent-burst test is flaky on main too (SQLite contention). Not touched.
+
+## Rebrand to lobo (2026-11-25)
+- Every user-facing "guiBot" is now "lobo": command descriptions, embeds (`/about`, `/help`), the AI persona and
+  history label, moderator names on cases and audit-log reasons ("lobo: Reached 2 warnings", "lobo automod"),
+  the fun module, README, the docs (the three `docs/superpowers` plan and spec files were renamed too), and the
+  `package.json` name. Old mod cases saved before the switch still say guiBot.
+- Written lowercase everywhere, even at the start of a sentence, to match the wordmark.
+- `GUIBOT_URL` is now `LOBO_URL` in the PrizePicks watcher and `.env.example`. Your Mac's `.env` doesn't set it, so
+  nothing changes; the watcher still defaults to the Railway host.
+- Kept on purpose, because renaming them breaks something live: the Railway host `guibot-production.up.railway.app`,
+  the SQLite path `/data/guibot.db`, the repo name `oliveirag/guiBot` (and the test fixtures that use it), the
+  LaunchAgent label `com.guibot.ppwatch` (an installed agent wouldn't be found by `pp:autostart off` anymore), and
+  everything in `legacy/`.
+- Discord avatar: `assets/brand/discord/lobo-discord-avatar-transparent-1024.png`, made from the kit's avatar with the
+  navy square removed and the husky scaled up 14% to fill the circle. In Discord's light theme the light grey face
+  and legs are faint against white; dark themes look right.
+- The bot's Discord username and avatar aren't changed by code. They're set in the Developer Portal.

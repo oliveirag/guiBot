@@ -8,7 +8,7 @@ const LINE = { win: 'You win.', lose: 'I win.', tie: 'Tie.' };
 export default command({
   data: new SlashCommandBuilder()
     .setName('rps')
-    .setDescription('Rock, paper, scissors against guiBot.')
+    .setDescription('Rock, paper, scissors against lobo.')
     .addStringOption((o) =>
       o
         .setName('pick')

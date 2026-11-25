@@ -1,8 +1,8 @@
 // PrizePicks watcher process. Runs on Gui's Mac with a real Chrome window (PrizePicks blocks headless
-// and server traffic), polls every profile guiBot tracks, and sends their open slips to guiBot.
+// and server traffic), polls every profile lobo tracks, and sends their open slips to lobo.
 // Started and restarted by scripts/pp-watch.mjs. Run it directly to skip the supervisor.
 // Usage: node scripts/pp/run.mjs [--url http://localhost:3000] [--rounds N]
-// Env (from .env): PP_WATCHER_TOKEN, GUIBOT_URL, PP_POLL_MS, PP_SHOW_CHROME=1 to keep the window up
+// Env (from .env): PP_WATCHER_TOKEN, LOBO_URL, PP_POLL_MS, PP_SHOW_CHROME=1 to keep the window up
 import { execFile } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,7 @@ try {
 
 const { values: args } = parseArgs({ options: { url: { type: 'string' }, rounds: { type: 'string' } } });
 const TOKEN = process.env.PP_WATCHER_TOKEN?.trim();
-const GUIBOT = (args.url || process.env.GUIBOT_URL?.trim() || 'https://guibot-production.up.railway.app').replace(/\/+$/, '');
+const LOBO = (args.url || process.env.LOBO_URL?.trim() || 'https://guibot-production.up.railway.app').replace(/\/+$/, '');
 // For testing: stop after this many polling rounds.
 const ROUNDS = Number(args.rounds) || Infinity;
 const POLL_MS = Number(process.env.PP_POLL_MS) || 5000;
@@ -41,7 +41,7 @@ if (!TOKEN) {
 /** A macOS notification, so a captcha doesn't sit unnoticed behind a minimized window. */
 function notify(message) {
   if (process.platform !== 'darwin') return;
-  execFile('osascript', ['-e', `display notification ${JSON.stringify(message)} with title "guiBot PrizePicks"`], () => {});
+  execFile('osascript', ['-e', `display notification ${JSON.stringify(message)} with title "lobo PrizePicks"`], () => {});
 }
 
 async function setWindow(page, state) {
@@ -53,15 +53,15 @@ async function setWindow(page, state) {
   }
 }
 
-async function guibot(path, body) {
-  const res = await fetch(`${GUIBOT}${path}`, {
+async function lobo(path, body) {
+  const res = await fetch(`${LOBO}${path}`, {
     method: body ? 'POST' : 'GET',
     headers: { authorization: `Bearer ${TOKEN}`, ...(body ? { 'content-type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(15_000),
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`guiBot ${path} ${res.status}: ${text.slice(0, 200)}`);
+  if (!res.ok) throw new Error(`lobo ${path} ${res.status}: ${text.slice(0, 200)}`);
   return JSON.parse(text);
 }
 
@@ -98,7 +98,7 @@ async function run({ beat, signal }) {
       beat();
       if (signal.aborted || chrome.exitCode !== null || !page.isOpen()) throw new Error('Chrome closed');
       if (Date.now() - lastProfilesAt > PROFILES_EVERY_MS) {
-        const { profiles: ids } = await guibot('/pp/profiles');
+        const { profiles: ids } = await lobo('/pp/profiles');
         for (const id of ids) if (!profiles.has(id)) profiles.set(id, null);
         for (const id of profiles.keys()) if (!ids.includes(id)) profiles.delete(id);
         if (lastProfilesAt === 0) say(`Watching ${ids.length} profile${ids.length === 1 ? '' : 's'}: ${ids.join(', ') || 'none yet'}`);
@@ -124,7 +124,7 @@ async function run({ beat, signal }) {
             await setWindow(page, 'minimized');
           }
           blocked = 0;
-          const result = await guibot('/pp/lineups', { profileId: id, profile: info ?? undefined, lineups: JSON.parse(res.body) });
+          const result = await lobo('/pp/lineups', { profileId: id, profile: info ?? undefined, lineups: JSON.parse(res.body) });
           if (result.posted > 0) say(`${info?.username ?? id}: posted ${result.posted} new slip${result.posted === 1 ? '' : 's'}`);
           if (result.baselined > 0) say(`${info?.username ?? id}: first check, skipped ${result.baselined} open slip(s)`);
           if (result.failed > 0) say(`${info?.username ?? id}: ${result.failed} slip(s) failed to post, retrying next check`);
@@ -155,5 +155,5 @@ async function run({ beat, signal }) {
 // Exit through process.exit so the exit hook closes Chrome (launchd stops us with SIGTERM).
 process.on('SIGINT', () => process.exit(0));
 process.on('SIGTERM', () => process.exit(0));
-say(`Sending slips to ${GUIBOT}`);
+say(`Sending slips to ${LOBO}`);
 await keepWatching(run, { say });

@@ -1,9 +1,9 @@
-# guiBot design
+# lobo design
 
 Status: approved 2026-09-22. Next step: implementation plan.
 
 ## Decisions
-- Name: guiBot. Personal-brand "everything bot" modeled on Carl-bot (github.com/botlabs-gg/carlbot-docs).
+- Name: lobo. Personal-brand "everything bot" modeled on Carl-bot (github.com/botlabs-gg/carlbot-docs).
 - Audience: Gui's own servers only (incl. Senior Design team server, 7 members).
 - Stack: TypeScript, Node 22, plain discord.js v14 + custom module loader, Prisma + SQLite, Vitest.
 - Hosting: Railway (Docker). SQLite at /data/guibot.db on a Railway volume.

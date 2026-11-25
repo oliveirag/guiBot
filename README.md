@@ -1,4 +1,11 @@
-# guiBot
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/svg/lobo-lockup-horizontal-reversed.svg">
+    <img src="assets/brand/svg/lobo-lockup-horizontal-color.svg" alt="lobo" width="294">
+  </picture>
+</p>
+
+# lobo
 
 My personal everything bot for Discord. It runs my servers and keeps track of how my Senior Design team is doing.
 
@@ -93,7 +100,7 @@ The `ai` module answers in Gui's voice with Gemini. Set `GEMINI_API_KEY` (and op
 default `gemini-2.5-flash`).
 
 - `/ask question`: answers in the channel. It reads the last 15 messages there for context.
-- @mention guiBot in your message to talk to it. Replying to one of its messages without tagging it gets no answer.
+- @mention lobo in your message to talk to it. Replying to one of its messages without tagging it gets no answer.
 - In a server with Senior Design set up, it also sees the active sprint, deadlines, and recent GitHub/Jira activity.
 
 It's on in every channel. Turn it off in one with `/config ai channel #channel enabled:false` (threads follow
@@ -111,7 +118,7 @@ post in the modlog channel if `logs` has one.
 - `/note add|list`, `/modlog case|edit|history`.
 - `/purge count [user] [bots] [links] [match]`, `/lock`, `/unlock`, `/slowmode delay`.
 
-Bans made in Discord's own menu still get a case (the moderator shows up if guiBot has View Audit Log).
+Bans made in Discord's own menu still get a case (the moderator shows up if lobo has View Audit Log).
 
 ## Logs
 
@@ -144,7 +151,7 @@ The `roles` module.
 - `/config roles autorole-add role [for]` gives a role to everyone who joins (people or bots). Waits for
   membership screening if the server uses it.
 
-guiBot can only hand out roles below its own top role, and mods can only set up roles below theirs.
+lobo can only hand out roles below its own top role, and mods can only set up roles below theirs.
 
 ## Welcome
 
@@ -165,12 +172,12 @@ closes voting. Anonymous suggestions hide the author's name; their verdict comes
 The `fun` module. No setup.
 
 - `/8ball question`, `/coinflip`, `/roll [dice]` (`d20`, `2d6`, `3d8+2`), `/choose options` (comma separated),
-  `/rps pick` against guiBot.
+  `/rps pick` against lobo.
 - `/cat`, `/dog`, `/meme` pull from TheCatAPI, dog.ceo, and meme-api.com (NSFW and spoiler memes skipped).
 - `/ship first [second]` and `/rate thing` give the same score every time for the same inputs.
 - `/trivia [category] [difficulty]` from Open Trivia DB: everyone gets one guess, the answer and who got it
   show after 20 seconds.
-- `/tictactoe [opponent]` with buttons. Leave opponent empty to play guiBot, which doesn't lose. The game lives
+- `/tictactoe [opponent]` with buttons. Leave opponent empty to play lobo, which doesn't lose. The game lives
   in the buttons, so it survives restarts.
 
 ## Utilities
@@ -180,7 +187,7 @@ The `utils` module. No setup.
 - `/remind set when about [dm]` pings you in the channel (or DMs you) later, like `when: 1h30m`. If the channel is
   gone it DMs you instead. `/remind list` and `/remind delete id`. Up to 25 going at once, a year out max.
 - `/poll question answers [hours] [multi]` posts a native Discord poll. Split answers with `|` (or commas).
-  Default 24 hours, max 768. guiBot needs Send Polls.
+  Default 24 hours, max 768. lobo needs Send Polls.
 - `/giveaway start prize duration [winners] [channel]` posts a giveaway people enter with a 🎉 button (click again
   to back out). It ends on its own and pings the winners; people who left the server can't win.
   `/giveaway end number` ends it early, `/giveaway reroll number [count]` draws someone who hasn't won yet, and
@@ -195,7 +202,7 @@ The `pp` module posts a card in Discord a few seconds after a tracked profile pl
   Needs Manage Server. Profiles have to be public.
 - PrizePicks blocks servers and headless browsers, so the polling runs on a Mac with Google Chrome: `npm run pp:watch`.
   It opens its own Chrome window (keep it open, and solve a captcha there if PrizePicks asks), checks every tracked
-  profile every 5 seconds (`PP_POLL_MS`), and sends open slips to guiBot, which posts only the new ones.
+  profile every 5 seconds (`PP_POLL_MS`), and sends open slips to lobo, which posts only the new ones.
   If Discord has a hiccup while posting a slip, that slip posts on the next check instead of being skipped.
   If Chrome closes or stops answering, the watcher logs why and reopens it. If the watcher process itself dies,
   `pp:watch` logs the exit code and starts it again (10s, backing off to 5 min while it keeps crashing).
@@ -204,5 +211,5 @@ The `pp` module posts a card in Discord a few seconds after a tracked profile pl
 - `npm run pp:autostart -- on` runs the watcher in the background and starts it at every login (logs in
   `scripts/.pp-watch.log`). Add `--stay-awake` to keep the Mac from idle-sleeping while it runs. `off` and `status`
   do what they say. Slips only come in while the Mac is awake.
-- `PP_WATCHER_TOKEN` must match in the Mac's `.env` and on Railway. `GUIBOT_URL` defaults to the Railway host.
+- `PP_WATCHER_TOKEN` must match in the Mac's `.env` and on Railway. `LOBO_URL` defaults to the Railway host.
 - `npm run pp:probe [id...]` saves raw lineup JSON to `scripts/.pp-out/` for debugging the parser.

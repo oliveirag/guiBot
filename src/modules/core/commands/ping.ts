@@ -3,7 +3,7 @@ import { command } from '../../../core/define.js';
 import { info } from '../../../core/embeds.js';
 
 export default command({
-  data: new SlashCommandBuilder().setName('ping').setDescription('Check if guiBot is awake.'),
+  data: new SlashCommandBuilder().setName('ping').setDescription('Check if lobo is awake.'),
   cooldownSeconds: 5,
   async run({ interaction }) {
     const latency = Date.now() - interaction.createdTimestamp;
