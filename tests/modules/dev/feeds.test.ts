@@ -17,8 +17,8 @@ import { resetDb } from '../../db.js';
 
 describe('normalizeTarget', () => {
   it('lowercases GitHub repos and accepts pasted URLs', () => {
-    expect(normalizeTarget('github', 'oliveirag/guiBot')).toBe('oliveirag/guibot');
-    expect(normalizeTarget('github', ' https://github.com/oliveirag/guiBot.git/ ')).toBe('oliveirag/guibot');
+    expect(normalizeTarget('github', 'oliveirag/lobo')).toBe('oliveirag/lobo');
+    expect(normalizeTarget('github', ' https://github.com/oliveirag/lobo.git/ ')).toBe('oliveirag/lobo');
   });
 
   it('accepts the ways people actually paste a repo, including org repos', () => {

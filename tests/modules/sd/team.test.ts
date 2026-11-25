@@ -17,7 +17,7 @@ describe('normalizeGithubLogin', () => {
       'OliveiraG',
       '@oliveirag',
       'https://github.com/oliveirag',
-      'github.com/oliveirag/guiBot',
+      'github.com/oliveirag/lobo',
       '<https://github.com/oliveirag>',
     ]) {
       expect(normalizeGithubLogin(raw), raw).toBe('oliveirag');

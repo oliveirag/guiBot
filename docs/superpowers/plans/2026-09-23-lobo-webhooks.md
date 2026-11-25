@@ -1112,8 +1112,8 @@ import { resetDb } from '../../db.js';
 
 describe('normalizeTarget', () => {
   it('lowercases GitHub repos and accepts pasted URLs', () => {
-    expect(normalizeTarget('github', 'oliveirag/guiBot')).toBe('oliveirag/guibot');
-    expect(normalizeTarget('github', ' https://github.com/oliveirag/guiBot.git/ ')).toBe('oliveirag/guibot');
+    expect(normalizeTarget('github', 'oliveirag/lobo')).toBe('oliveirag/lobo');
+    expect(normalizeTarget('github', ' https://github.com/oliveirag/lobo.git/ ')).toBe('oliveirag/lobo');
   });
 
   it('uppercases Jira project keys', () => {
@@ -1219,7 +1219,7 @@ export function normalizeTarget(source: FeedSource, raw: string): string {
     .replace(/\.git$/i, '');
   if (source === 'github') {
     const key = value.toLowerCase();
-    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like oliveirag/guiBot.');
+    if (!GITHUB_REPO.test(key)) throw new UserError('Use the repo as owner/name, like oliveirag/lobo.');
     return key;
   }
   const key = value.toUpperCase();
@@ -1447,11 +1447,11 @@ describe('verifySignature', () => {
 import { describe, expect, it } from 'vitest';
 import { normalizeGithub } from '../../../src/modules/dev/lib/github.js';
 
-const repository = { full_name: 'OliveiraG/guiBot' };
+const repository = { full_name: 'OliveiraG/lobo' };
 const pr = (extra: Record<string, unknown> = {}) => ({
   number: 12,
   title: 'Add login',
-  html_url: 'https://github.com/OliveiraG/guiBot/pull/12',
+  html_url: 'https://github.com/OliveiraG/lobo/pull/12',
   user: { login: 'gui' },
   merged: false,
   merged_by: null,
@@ -1466,11 +1466,11 @@ describe('normalizeGithub', () => {
       {
         source: 'github',
         kind: 'pr.opened',
-        key: 'oliveirag/guibot',
+        key: 'oliveirag/lobo',
         actor: 'gui',
         actorName: 'gui',
         title: '#12 Add login',
-        url: 'https://github.com/OliveiraG/guiBot/pull/12',
+        url: 'https://github.com/OliveiraG/lobo/pull/12',
         detail: 'gui wants to merge into main',
         count: null,
       },
