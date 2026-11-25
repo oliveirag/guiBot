@@ -47,7 +47,7 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - On start, a Chrome left on port 9335 by a dead watcher is closed first. Otherwise the new Chrome handed off to it and the watcher saw "Chrome closed" every round.
 - Tracking without the watcher isn't possible automatically: DataDome blocks Railway and headless, and PrizePicks sends no emails. Gui picked "hidden Chrome" and said to run it all the time, not only game hours (2026-10-22).
 - Chrome now starts minimized and comes up with a macOS notification on a captcha, then minimizes again once a check passes. `PP_SHOW_CHROME=1` keeps it visible. Not verified yet that DataDome treats a minimized window the same.
-- `npm run pp:autostart -- on` installs a LaunchAgent (com.guibot.ppwatch) that starts the supervised watcher at login and restarts it after a crash. `--stay-awake` (wraps it in `caffeinate -i`) is off by default because it changes how your Mac sleeps.
+- `npm run pp:autostart -- on` installs a LaunchAgent (com.lobo.ppwatch; `on` and `off` also remove the old com.guibot.ppwatch) that starts the supervised watcher at login and restarts it after a crash. `--stay-awake` (wraps it in `caffeinate -i`) is off by default because it changes how your Mac sleeps.
 - Dropped slips fix (2026-11-22): a slip is only marked seen once it's posted or its channel is gone for good (deleted, no access). A temporary Discord error (5xx, timeout, rate limit) un-marks it, so the next 5s check retries it, and the rest of that check keeps going for other slips and servers. Trade-off: if Discord took the message but the request still errored, the slip can post twice. I picked that over losing slips. The watcher log now says how many failed.
 ## Deploy (2026-10-22)
 - /pp not live: the code registers /pp fine (49 global commands, valid payload). Likely cause is Railway's `ENABLED_MODULES` leaving out `pp`, or the deploy step failing. I made boot and `dist/deploy.js` log skipped modules, every deployed command, and the deploy error instead of guessing.
@@ -62,10 +62,10 @@ Decisions I made on my own while you were away. Each has the default I picked; t
 - Written lowercase everywhere, even at the start of a sentence, to match the wordmark.
 - `GUIBOT_URL` is now `LOBO_URL` in the PrizePicks watcher and `.env.example`. Your Mac's `.env` doesn't set it, so
   nothing changes; the watcher still defaults to the Railway host.
-- Kept on purpose, because renaming them breaks something live: the Railway host `guibot-production.up.railway.app`,
-  the SQLite path `/data/guibot.db`, the repo name `oliveirag/guiBot` (and the test fixtures that use it), the
-  LaunchAgent label `com.guibot.ppwatch` (an installed agent wouldn't be found by `pp:autostart off` anymore), and
-  everything in `legacy/`.
+- Gui picked "rename everything" (2026-11-25). The LaunchAgent is now `com.lobo.ppwatch`; `pp:autostart on` and `off`
+  remove the old `com.guibot.ppwatch` first, and `status` warns if it's still running. Still waiting on Gui: renaming
+  the GitHub repo and the Railway domain, then moving `/data/guibot.db` to `/data/lobo.db` together with
+  `DATABASE_URL`. Until then those three names stay, and `legacy/` stays untouched.
 - Discord avatar: `assets/brand/discord/lobo-discord-avatar-transparent-1024.png`, made from the kit's avatar with the
   navy square removed and the husky scaled up 14% to fill the circle. In Discord's light theme the light grey face
   and legs are faint against white; dark themes look right.

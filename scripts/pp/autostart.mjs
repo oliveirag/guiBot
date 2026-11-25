@@ -1,5 +1,7 @@
 // Builds the macOS LaunchAgent that starts the PrizePicks watcher at login and restarts it if it dies.
-export const LABEL = 'com.guibot.ppwatch';
+export const LABEL = 'com.lobo.ppwatch';
+/** Labels from before the rename. `on` and `off` remove these so two watchers never run. */
+export const OLD_LABELS = ['com.guibot.ppwatch'];
 
 const esc = (s) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
