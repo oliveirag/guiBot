@@ -17,7 +17,7 @@ try {
 
 const { values: args } = parseArgs({ options: { url: { type: 'string' }, rounds: { type: 'string' } } });
 const TOKEN = process.env.PP_WATCHER_TOKEN?.trim();
-const LOBO = (args.url || process.env.LOBO_URL?.trim() || 'https://guibot-production.up.railway.app').replace(/\/+$/, '');
+const LOBO = (args.url || process.env.LOBO_URL?.trim() || 'https://lobo-prod.up.railway.app').replace(/\/+$/, '');
 // For testing: stop after this many polling rounds.
 const ROUNDS = Number(args.rounds) || Infinity;
 const POLL_MS = Number(process.env.PP_POLL_MS) || 5000;
