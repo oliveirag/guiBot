@@ -7,7 +7,7 @@
 
 # lobo
 
-My personal everything bot for Discord. It runs my servers and keeps track of how my Senior Design team is doing.
+My personal everything bot for Discord.
 
 ## Develop
 
